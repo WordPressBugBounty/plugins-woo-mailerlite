@@ -309,6 +309,7 @@ function woo_ml_billing_checkout_fields($fields) {
             $new_billing_fields['woo_ml_subscribe'] = [
                 'type' => ($hidden === 'no') ? 'checkbox' : 'hidden',
                 'default' => (bool) ($_COOKIE['mailerlite_accepts_marketing'] ?? 'yes' === $preselect),
+                'priority' => $field['priority'] + 1,
                 'required' => false,
             ];
             $new_billing_fields['woo_ml_preselect_enabled'] = [

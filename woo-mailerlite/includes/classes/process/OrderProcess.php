@@ -525,16 +525,18 @@ class OrderProcess extends Singleton
     public function paymentStatusProcessing($order_id)
     {
         $order = wc_get_order($order_id);
+        // always save subscribe checkbox value since order status
+        // can update in the future lifecycle of the order
+        if ((isset($_POST['woo_ml_subscribe']) && ('1' == $_POST['woo_ml_subscribe'])) || (MailerLiteSettings::getInstance()->getMlOption('checkout_hide') === 'yes')) {
+            $this->setOrderCustomerSubscribe($order_id);
+        } elseif ((isset($_COOKIE['mailerlite_accepts_marketing']) && $_COOKIE['mailerlite_accepts_marketing'])) {
+            $this->setOrderCustomerSubscribe($order_id);
+        } elseif (isset($_COOKIE['mailerlite_accepts_marketing']) && $_COOKIE['mailerlite_accepts_marketing'] === false) {
+            $order->add_meta_data('_woo_ml_subscribe', false);
+            $order->save_meta_data();
+        }
 
         if ($order->get_status() === 'processing') {
-            if ((isset($_COOKIE['mailerlite_accepts_marketing']) && $_COOKIE['mailerlite_accepts_marketing']) || MailerLiteSettings::getInstance()->getMlOption('checkout_hide') === 'yes') {
-                $order->add_meta_data('_woo_ml_subscribe', true);
-                $order->save_meta_data();
-            } elseif (isset($_COOKIE['mailerlite_accepts_marketing']) && $_COOKIE['mailerlite_accepts_marketing'] === false) {
-                $order->add_meta_data('_woo_ml_subscribe', false);
-                $order->save_meta_data();
-            }
-
             $data = [];
             $customer_email = $order->get_billing_email();
 

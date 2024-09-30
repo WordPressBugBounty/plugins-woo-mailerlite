@@ -68,7 +68,10 @@ class SynchronizeSettings extends Singleton
                     $productShortDescription = $product->get_short_description();
 
                     $productURL = $product->get_permalink();
-
+                    if (empty($productURL) || !is_string($productURL)) {
+                        MailerLiteSettings::getInstance()->completeProductTracking((string)$productID);
+                        continue;
+                    }
                     $categories = get_the_terms($productID, 'product_cat');
 
                     if (!$categories || is_wp_error($categories)) {
