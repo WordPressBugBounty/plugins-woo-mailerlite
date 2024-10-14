@@ -346,6 +346,28 @@ function woo_ml_skip_resource_sync()
     }
 }
 
+function woo_ml_enable_debug_mode()
+{
+    if (!check_ajax_referer( 'woo_ml_post_nonce', 'nonce', false)) {
+        wp_send_json_error( 'Invalid security token sent.' );
+        wp_die();
+    }
+    $settings = get_option('woocommerce_mailerlite_settings', []);
+    if ($settings['woo_ml_debug_mode_enabled']) {
+        $settings['woo_ml_debug_mode_enabled'] = false;
+    } else {
+        $settings['woo_ml_debug_mode_enabled'] = true;
+    }
+    update_option('woocommerce_mailerlite_settings',
+        apply_filters('woocommerce_settings_api_sanitized_fields_mailerlite', $settings), 'yes');
+
+    wp_send_json([
+        'error' => false,
+        'state' => $settings['woo_ml_debug_mode_enabled'],
+        'message' => get_option('woocommerce_mailerlite_settings')
+    ]);
+}
+
 add_action('wp_ajax_woo_ml_admin_ajax_update_preselect_checkbox', 'woo_ml_admin_ajax_update_preselect_checkbox');
 
 add_action('wp_ajax_woo_ml_create_group', 'woo_ml_admin_create_group');
@@ -353,3 +375,4 @@ add_action('wp_ajax_woo_ml_get_debug_log', 'woo_ml_admin_get_debug_log');
 add_action('wp_ajax_woo_ml_reset_integration', 'woo_ml_reset_integration');
 add_action('wp_ajax_woo_ml_save_group', 'woo_ml_admin_save_group');
 add_action('wp_ajax_woo_ml_skip_resource_sync', 'woo_ml_skip_resource_sync');
+add_action('wp_ajax_woo_ml_enable_debug_mode', 'woo_ml_enable_debug_mode');

@@ -384,6 +384,40 @@ jQuery(document).ready(function (a) {
             });
 
         });
+
+        $('#enableDebugMode').on('click', function () {
+            buttonLoadingState($(this));
+            $.ajax({
+                url: woo_ml_post.ajax_url,
+                type: "post",
+                data: {
+                    action: "woo_ml_enable_debug_mode",
+                    nonce: woo_ml_post.nonce
+                },
+                success: function (res) {
+                    console.log(res)
+                    if (!res.error) {
+                        if (res.state) {
+                            $('#enableDebugMode').removeClass('btn-primary-ml');
+                            $('#enableDebugMode').addClass('btn-danger-ml');
+                            $('#enableDebugMode').html('Disable debug mode');
+                        } else {
+                            $('#enableDebugMode').removeClass('btn-danger-ml');
+                            $('#enableDebugMode').addClass('btn-primary-ml');
+                            $('#enableDebugMode').html('Enable debug mode');
+                        }
+
+                    }
+                    buttonLoadingState($('#enableDebugMode'), true);
+
+                },
+                error: function (x, status) {
+                    buttonLoadingState($('#enableDebugMode'), true);
+                    console.log(x,status);
+                }
+            });
+        });
+
         $('#skipResourceSync').on('click', function () {
             if(errors.length > 0 ) {
                 $('.woo-ml-wizard-error').remove();

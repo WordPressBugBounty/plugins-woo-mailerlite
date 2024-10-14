@@ -136,6 +136,10 @@ if ( ! class_exists('Woo_Mailerlite_Integration')) :
                 if ( ! woo_ml_integration_setup_completed()) {
                     woo_ml_setup_integration();
                 }
+                if (!isset($this->settings['woo_ml_debug_mode_enabled'])) {
+                    $this->settings['woo_ml_debug_mode_enabled'] = false;
+                    update_option('woocommerce_mailerlite_settings', $this->settings);
+                }
                 require_once WOO_MAILERLITE_DIR . 'includes/views/app.php';
             } else {
                 $currentStep = get_option('woo_ml_wizard_setup', 0);

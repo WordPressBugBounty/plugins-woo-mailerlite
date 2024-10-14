@@ -28,6 +28,20 @@ $selectedCheckoutPosition = $this->settings['checkout_position'];
 
 $checkoutDisabled = !($this->settings['checkout'] == 'yes');
 $currentGroup = MailerLiteSettings::getInstance()->getCurrentSelectedGroup();
+
+$count = 0;
+$debugSettings = get_option('woo_ml_debug_funcions', []);
+foreach ($debugSettings as $function => $calls) {
+    if ($calls >= 5) {
+        $count++;
+    }
+    if ($count == 5) {
+        update_option('woo_ml_debug_funcions', []);
+        $this->settings['woo_ml_debug_mode_enabled'] = false;
+        update_option('woocommerce_mailerlite_settings', $this->settings);
+        break;
+    }
+}
 ?>
 <div class="woo-ml-wizard">
     <div class="woo-ml-header">
@@ -372,11 +386,16 @@ $currentGroup = MailerLiteSettings::getInstance()->getCurrentSelectedGroup();
 </div>
 <?php if ( ! isset($stepThree)) : ?>
     <div class="woo-ml-wizard card-between">
-        <div>
+        <div class="flex-start-ml">
             <h2 class="settings-block-header" style="margin-top:0; margin-bottom: 8px;">Debug logs</h2>
             <label class="settings-label-medium">This is an advanced troubleshooting method which gives a deeper insight and helps our support team to identify problems.</label>
+            <button type="button" id="openDebugLog" class="btn-secondary-ml"><span class="woo-ml-button-text">Open debug logs</span></button>
+            <div class="mt-6-ml">
+                <button type="button" id="enableDebugMode" class="btn-<?php echo $this->settings['woo_ml_debug_mode_enabled'] ? 'danger' : 'primary' ?>-ml"><span class="woo-ml-button-text"><?php echo $this->settings['woo_ml_debug_mode_enabled'] ? 'Disable' : 'Enable'; ?> debug mode</span></button>
+            </div>
         </div>
-        <button type="button" id="openDebugLog" class="btn-secondary-ml"><span class="woo-ml-button-text">Open debug logs</span></button>
+
+
     </div>
     <div class="woo-ml-wizard card-between">
         <div>
