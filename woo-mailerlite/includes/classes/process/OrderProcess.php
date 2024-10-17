@@ -695,6 +695,8 @@ class OrderProcess extends Singleton
             //receive newsletters
 
             if ($mailerliteClient->getApiType() === ApiType::CLASSIC) {
+                $data['checkout_data'] = CheckoutProcess::getInstance()->getCheckoutData();
+
                 if ($event === 'order_created') {
                     $result = $mailerliteClient->sendSubscriberData($shop_id, $data);
 
