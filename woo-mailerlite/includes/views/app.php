@@ -298,7 +298,7 @@ foreach ($debugSettings as $function => $calls) {
                         <label class="input-mailerlite">
                             <input type="text"
                                    class="woo-ml-form-checkbox text-input flex-start-ml mb-3-ml"
-                                   value="<?php echo $this->settings['checkout_label'] ?? 'Yes, I want to receive your newsletter.'; ?>"
+                                   value="<?php echo $this->settings['checkout_label'] ? strip_tags(stripslashes($this->settings['checkout_label'])) : 'Yes, I want to receive your newsletter.'; ?>"
                                    name="checkout_label"
                                    placeholder="I.e. I want to receive your newsletter."
                                 <?php echo $checkoutDisabled ? "disabled" : "" ?>

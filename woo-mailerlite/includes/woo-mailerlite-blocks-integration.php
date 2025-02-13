@@ -65,7 +65,7 @@ class WooMlBlock_Integration implements IntegrationInterface
 
         return [
             'MailerLiteWooActive'    => $mailerLiteSettings->isActive(),
-            'MailerLiteWooLabel'     => $mailerLiteSettings->getMlOption('checkout_label'),
+            'MailerLiteWooLabel'     => strip_tags(stripslashes($mailerLiteSettings->getMlOption('checkout_label'))),
             'MailerLiteWooPreselect' => $mailerLiteSettings->getMlOption('checkout_preselect',
                     'no') == 'yes',
             'MailerLiteWooHidden'    => $mailerLiteSettings->getMlOption('checkout_hide', 'no') == 'yes',

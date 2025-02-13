@@ -990,9 +990,10 @@ class MailerLiteAPI
     public function syncCustomer($shop_id, $customer_id, $email, $fields)
     {
 
-        if (strval($customer_id) === "0") {
-            return false;
-        }
+        // Not use this check when changes in ML app released. We should allow 0 for update old customer
+//        if (strval($customer_id) === "0") {
+//            return false;
+//        }
 
         $data = [
             'resource_id' => (string)$customer_id,

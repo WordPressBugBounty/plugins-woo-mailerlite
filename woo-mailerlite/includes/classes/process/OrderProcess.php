@@ -147,30 +147,34 @@ class OrderProcess extends Singleton
 
         $customer_email = $order->get_billing_email();
 
-        if (count($customer)) {
-            foreach ($customer as $value) {
-                if ( ! isset($customer['last_order_date'])) {
-                    $customer['last_order_date'] = $value['date_last_order'];
-                }
+        // Get all customer orders with status processing or completed
+        $orders = wc_get_orders([
+            'billing_email' => $customer_email,
+            'status' => ['wc-processing', 'wc-completed'],
+            'customer_id' => $order->get_customer_id()
+        ]);
 
-                if ($customer['last_order_date'] < $value['date_last_order']) {
-                    $customer['last_order_date'] = $value['date_last_order'];
+        // Count orders data if we have more than one order
+        if (count($orders) > 1) {
+            foreach ($orders as $orderItem) {
+                if ($last_order_date < $orderItem->get_date_created()->date_i18n('Y-m-d H:i:s')) {
+                    $last_order_date = $orderItem->get_date_created()->date_i18n('Y-m-d H:i:s');
                 }
-
-                $order_count     += $value['orders_count'] ?? 0;
-                $total_spent     += $value['total_spend'] ?? 0;
+                $total_spent += $orderItem->get_total() ?? 0;
             }
 
-            $last_order_date = $customer['last_order_date'];
+            $order_count = count($orders);
+
             $dateCreated = $order->get_date_created();
             // sometimes when an order is placed, the last order is not included with the orders count
             if (isset($dateCreated) && ($last_order_date < $order->get_date_created()->date_i18n('Y-m-d H:i:s'))) {
                 $last_order_date = $order->get_date_created()->date_i18n('Y-m-d H:i:s');
-
                 $order_count++;
                 $total_spent += $order->get_total();
             }
-        } else {
+        }
+        // Return current order stats if we don't have orders for this customer
+        else {
             $last_order_date = $order->get_date_created()->date_i18n('Y-m-d H:i:s');
 
             $order_count++;
@@ -859,18 +863,14 @@ class OrderProcess extends Singleton
         if ($mailerliteClient->getApiType() == ApiType::CURRENT) {
             $mailerliteClient->deleteOrder($shop, $order_id);
 
-            // recalculate as the values contain the current order
-            $customer_data['orders_count']--;
-            $customer_data['total_spent'] -= $order->get_total();
-
             $mailerliteClient->syncCustomer($shop, $customer_data['customer_id'], $customer_data['email'],
                 $customer_data);
         }
 
         if ($mailerliteClient->getApiType() == ApiType::CLASSIC) {
             $subscriber_fields = [
-                'woo_orders_count'  => $customer_data['orders_count'] - 1,
-                'woo_total_spent'   => $customer_data['total_spent'] - $order->get_total(),
+                'woo_orders_count'  => $customer_data['orders_count'],
+                'woo_total_spent'   => $customer_data['total_spent'],
                 'woo_last_order'    => $customer_data['last_order'],
                 'woo_last_order_id' => $customer_data['last_order_id']
             ];
@@ -879,6 +879,35 @@ class OrderProcess extends Singleton
 
             $mailerliteClient->syncCustomer($store, $customer_data['customer_id'],
                 $customer_data['email'], $subscriber_fields);
+        }
+
+        return true;
+    }
+
+    public function cancelOrderByResourceId($order_id, $resource_id)
+    {
+        $mailerliteClient = new PlatformAPI(MAILERLITE_WP_API_KEY);
+
+        $shop = get_option('woo_ml_shop_id', false);
+
+        if ($shop === false) {
+            return false;
+        }
+
+        @setcookie('mailerlite_checkout_email', null, -1, '/');
+        @setcookie('mailerlite_checkout_token', null, -1, '/');
+        @setcookie('mailerlite_accepts_marketing', null, -1, '/');
+
+        if ($mailerliteClient->getApiType() == ApiType::CURRENT) {
+            $mailerliteClient->deleteOrder($shop, $resource_id);
+
+            if ($order_id) {
+                $customer = $this->getCustomerDataFromOrder($order_id);
+
+                if ($customer) {
+                    CheckoutProcess::getInstance()->removeCheckout($customer['email']);
+                }
+            }
         }
 
         return true;

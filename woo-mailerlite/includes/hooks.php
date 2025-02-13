@@ -32,7 +32,7 @@ function woo_ml_checkout_label()
         return;
     }
 
-    $label     = MailerLiteSettings::getInstance()->getMlOption('checkout_label');
+    $label     = strip_tags(stripslashes(MailerLiteSettings::getInstance()->getMlOption('checkout_label')));
     $preselect = MailerLiteSettings::getInstance()->getMlOption('checkout_preselect', 'no');
     $hidden    = MailerLiteSettings::getInstance()->getMlOption('checkout_hide', 'no');
 
@@ -334,3 +334,18 @@ function woo_ml_billing_checkout_fields($fields) {
 }
 
 add_filter('woocommerce_checkout_fields', 'woo_ml_billing_checkout_fields', PHP_INT_MAX);
+
+function woo_ml_checkout_order_created($order) {
+    $checkout_id = $_COOKIE['mailerlite_checkout_token'] ?? $_SESSION['mailerlite_checkout_token'] ?? $_POST['cookie_mailerlite_checkout_token'] ?? null;
+    $order_id = null;
+
+    if ($checkout_id !== null) {
+        if (class_exists('WC_Order') && $order instanceof WC_Order) {
+            $order_id = $order->get_id();
+        }
+
+        OrderProcess::getInstance()->cancelOrderByResourceId($order_id, $checkout_id);
+    }
+}
+
+add_action('woocommerce_checkout_order_created', 'woo_ml_checkout_order_created');
