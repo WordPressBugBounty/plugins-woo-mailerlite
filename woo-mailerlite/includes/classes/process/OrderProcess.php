@@ -175,10 +175,12 @@ class OrderProcess extends Singleton
         }
         // Return current order stats if we don't have orders for this customer
         else {
-            $last_order_date = $order->get_date_created()->date_i18n('Y-m-d H:i:s');
+            if (!empty($order)) {
+                $last_order_date = $order->get_date_created()->date_i18n('Y-m-d H:i:s');
 
-            $order_count++;
-            $total_spent += $order->get_total();
+                $order_count++;
+                $total_spent += $order->get_total();
+            }
         }
 
         return [
