@@ -59,7 +59,7 @@ class OrderSyncProcess extends Singleton
 
                 $customer_fields = OrderProcess::getInstance()->getOrderTrackingData($order_id);
 
-                if ($customer_fields['customer_id'] !== 0) {
+                if ($customer_fields['customer_id'] !== null) {
                     $order_customer['resource_id'] = (string)$customer_fields['customer_id'];
                 }
 
@@ -130,7 +130,7 @@ class OrderSyncProcess extends Singleton
 
             $customer_fields = OrderProcess::getInstance()->getOrderTrackingData($order_id);
 
-            if ($customer_fields['customer_id'] !== 0) {
+            if ($customer_fields['customer_id'] !== null) {
                 $order_customer['resource_id'] = (string)$customer_fields['customer_id'];
             }
 

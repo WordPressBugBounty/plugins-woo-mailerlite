@@ -994,9 +994,13 @@ class MailerLiteAPI
 //        if (strval($customer_id) === "0") {
 //            return false;
 //        }
+        // If null don't change it as string
+        if ($customer_id !== null) {
+            $customer_id = (string)$customer_id;
+        }
 
         $data = [
-            'resource_id' => (string)$customer_id,
+            'resource_id' => $customer_id,
             'email'       => $email,
         ];
 

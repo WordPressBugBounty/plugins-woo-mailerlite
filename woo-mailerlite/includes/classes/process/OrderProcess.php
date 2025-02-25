@@ -176,7 +176,9 @@ class OrderProcess extends Singleton
         // Return current order stats if we don't have orders for this customer
         else {
             if (!empty($order)) {
-                $last_order_date = $order->get_date_created()->date_i18n('Y-m-d H:i:s');
+                if (!empty($orderCreatedDate = $order->get_date_created())) {
+                    $last_order_date = $orderCreatedDate->date_i18n('Y-m-d H:i:s');
+                }
 
                 $order_count++;
                 $total_spent += $order->get_total();
@@ -185,7 +187,7 @@ class OrderProcess extends Singleton
 
         return [
             'email' => $customer_email,
-            'customer_id' => $customer[0]['id'] ?? 0,
+            'customer_id' => $customer[0]['id'] ?? null,
             'orders_count' => $order_count,
             'total_spent' => $total_spent,
             'last_order' => $last_order_date,
@@ -291,7 +293,7 @@ class OrderProcess extends Singleton
 
             $customer_fields = $this->getOrderTrackingData($order_id);
 
-            if ($customer_fields['customer_id'] !== 0) {
+            if ($customer_fields['customer_id'] !== null) {
                 $order_customer['resource_id'] = (string)$customer_fields['customer_id'];
             }
 
@@ -800,7 +802,7 @@ class OrderProcess extends Singleton
 
                 $customer_fields = $this->getOrderTrackingData($order_data['order']['id']);
 
-                if ($customer_fields['customer_id'] !== 0) {
+                if ($customer_fields['customer_id'] !== null) {
                     $order_customer['resource_id'] = (string)$customer_fields['customer_id'];
                 }
 
