@@ -5,7 +5,8 @@ class WooMailerLiteMigration
 
     public static function migrate()
     {
-        $cartsTableSql = "CREATE TABLE IF NOT EXISTS wp_woo_mailerlite_carts (
+        $prefix = db()->prefix;
+        $cartsTableSql = "CREATE TABLE IF NOT EXISTS {$prefix}woo_mailerlite_carts (
                         id BIGINT (20) NOT NULL AUTO_INCREMENT,
                     hash VARCHAR(255) DEFAULT NULL,
                     email VARCHAR(255) DEFAULT NULL,
@@ -17,7 +18,7 @@ class WooMailerLiteMigration
                     DEFAULT CHARACTER
                     SET utf8mb4 COLLATE utf8mb4_unicode_520_ci;";
         db()->query($cartsTableSql);
-        $jobsTableMigration = "CREATE TABLE IF NOT EXISTS wp_woo_mailerlite_jobs (
+        $jobsTableMigration = "CREATE TABLE IF NOT EXISTS {$prefix}woo_mailerlite_jobs (
                             id BIGINT (20) NOT NULL AUTO_INCREMENT,
                         object_id TEXT NOT NULL,
                         job TEXT NOT NULL,
@@ -55,5 +56,29 @@ class WooMailerLiteMigration
                 db()->query("TRUNCATE TABLE $table");
             }
         }
+    }
+
+    public static function customPrefixTablesMigrate()
+    {
+        try {
+            $oldPrefix = 'wp_';
+            $newPrefix = db()->prefix;
+
+            $tables = [
+                $oldPrefix . 'woo_mailerlite_carts' => $newPrefix . 'woo_mailerlite_carts',
+                $oldPrefix . 'woo_mailerlite_jobs' => $newPrefix . 'woo_mailerlite_jobs'
+            ];
+
+            foreach ($tables as $key => $value) {
+                if (db()->get_var("SHOW TABLES LIKE '{$key}'") === $key &&
+                    db()->get_var("SHOW TABLES LIKE '{$value}'") !== $value) {
+                    db()->query("RENAME TABLE {$key} TO {$value}");
+                }
+            }
+            WooMailerLiteOptions::update('customTableCheck', true);
+        } catch (Throwable $th) {
+            WooMailerLiteLog()->error($th->getMessage());
+        }
+        return true;
     }
 }

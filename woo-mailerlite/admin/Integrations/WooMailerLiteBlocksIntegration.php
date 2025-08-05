@@ -107,6 +107,6 @@ class WooMailerLiteBlocksIntegration implements Automattic\WooCommerce\Blocks\In
             return filemtime($file);
         }
 
-        return '3.0.0';
+        return WOO_MAILERLITE_VERSION;
     }
 }

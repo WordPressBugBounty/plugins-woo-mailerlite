@@ -50,7 +50,7 @@ abstract class WooMailerLiteAbstractJob
         $jobClass = static::class;
         $objectId = 0;
 
-        if (!$data['selfMechanism']['sync'] && class_exists('ActionScheduler')) {
+        if ((isset($data['selfMechanism']['sync']) && !$data['selfMechanism']['sync']) && class_exists('ActionScheduler')) {
             if (!as_has_scheduled_action($jobClass)) {
                 $objectId = as_enqueue_async_action($jobClass, $data);
             }

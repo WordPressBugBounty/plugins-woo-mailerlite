@@ -27,7 +27,7 @@ class WooMailerLitePublic {
      * @since    1.0.0
      */
     public function enqueueScripts() {
-        wp_register_script('woo-mailerlite-public', plugin_dir_url( __FILE__ ) . 'js/woo-mailerlite-public.js', array(), '3.0.0');
+        wp_register_script('woo-mailerlite-public', plugin_dir_url( __FILE__ ) . 'js/woo-mailerlite-public.js', array(), WOO_MAILERLITE_VERSION);
         wp_localize_script('woo-mailerlite-public', 'wooMailerLitePublicData', array(
             'ajaxUrl' => admin_url('admin-ajax.php'),
             'language' => get_locale(),
@@ -38,7 +38,7 @@ class WooMailerLitePublic {
                 'hidden' => (bool) WooMailerLiteOptions::get('settings.checkoutHidden'),
             ]
         ));
-        wp_enqueue_script('woo-mailerlite-public', '', array(), '3.0.0', true);
+        wp_enqueue_script('woo-mailerlite-public', '', array(), WOO_MAILERLITE_VERSION, true);
 
         if (!WooMailerLiteOptions::get('enabled')) {
             return true;

@@ -117,6 +117,7 @@ class WooMailerLite {
         }
         $this->loader->add_filter('woocommerce_product_data_tabs', $pluginAdmin, 'woo_ml_product_data_tab');
         $this->loader->add_filter('woocommerce_product_data_store_cpt_get_products_query', $pluginAdmin, 'handleCustomProductQuery', 10, 2);
+        $this->loader->add_filter('plugin_action_links_woo-mailerlite/woo-mailerlite.php', $pluginAdmin, 'addSettingsOptionInPluginList');
         $this->loader->add_action('woocommerce_product_bulk_and_quick_edit', WooMailerLiteAdminSettingsController::instance(), 'updateIgnoreProductsBulkAndQuickEdit', 10, 2);
         $this->loader->add_filter('script_loader_tag', $pluginAdmin, 'addModuleTypeScript', 10, 3);
         $this->loader->add_action('admin_enqueue_scripts', $pluginAdmin, 'enqueueScripts');
@@ -320,6 +321,9 @@ class WooMailerLite {
 
     public function handleUpgrade()
     {
+        if (!WooMailerLiteOptions::get('customTableCheck')) {
+            WooMailerLiteMigration::customPrefixTablesMigrate();
+        }
         if (get_option('woo_ml_key', false) && (get_option('woo_ml_wizard_setup', 0) == 2)) {
             $settings = get_option('woocommerce_mailerlite_settings', []);
             if (!empty($settings)) {

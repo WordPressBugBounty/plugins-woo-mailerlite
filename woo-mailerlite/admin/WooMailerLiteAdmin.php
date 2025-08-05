@@ -20,8 +20,11 @@ class WooMailerLiteAdmin
             [$this, 'wooMailerLiteSettingsPageCallback']);
     }
 
-    public function enqueueScripts()
+    public function enqueueScripts($hook)
     {
+        if ($hook !== 'woocommerce_page_mailerlite') {
+            return;
+        }
         wp_enqueue_script('woo-mailerlite-vue-cdn', 'https://cdn.jsdelivr.net/npm/vue@3.5.13/dist/vue.global.prod.js', [], null, true);
         wp_localize_script('woo-mailerlite-admin', 'woo_mailerlite_admin_data', array(
             'ajax_url' => admin_url('admin-ajax.php'),
@@ -33,10 +36,13 @@ class WooMailerLiteAdmin
 
     }
 
-    public function enqueueStyles() {
-        wp_enqueue_style('woo-mailerlite-admin-css', plugin_dir_url( __FILE__ ) . '../admin/assets/css/admin.css', false, "3.0.0");
+    public function enqueueStyles($hook) {
+        if ($hook !== 'woocommerce_page_mailerlite') {
+            return;
+        }
+        wp_enqueue_style('woo-mailerlite-admin-css', plugin_dir_url( __FILE__ ) . '../admin/assets/css/admin.css', false, WOO_MAILERLITE_VERSION);
         wp_enqueue_style('style2-style', 'https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css');
-        wp_enqueue_style('style2-mailerlite-style', plugin_dir_url( __FILE__ ) . '../public/css/mailerlite-select2.css',false, "3.0.0");
+        wp_enqueue_style('style2-mailerlite-style', plugin_dir_url( __FILE__ ) . '../public/css/mailerlite-select2.css',false, WOO_MAILERLITE_VERSION);
     }
 
     public function wooMailerLiteSettingsPageCallback()
@@ -162,5 +168,13 @@ class WooMailerLiteAdmin
         }
 
         return $query;
+    }
+
+    public function addSettingsOptionInPluginList($links)
+    {
+        $settings_url = admin_url('admin.php?page=mailerlite');
+        $settings_link = '<a href="' . esc_url($settings_url) . '">Settings</a>';
+        array_unshift($links, $settings_link);
+        return $links;
     }
 }
