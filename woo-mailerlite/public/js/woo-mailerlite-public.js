@@ -4,14 +4,16 @@ jQuery(document).ready(function(a) {
     let firstName = null;
     let lastName = null;
     let foundEmail = false;
-    triggerAddEvents();
+
     if (document.querySelector('[data-block-name="woocommerce/checkout"]')) {
         window.mailerlitePublicJsCaptured = false
         return
     } else {
         window.mailerlitePublicJsCaptured = true
     }
-
+    if (wooMailerLitePublicData.checkboxSettings.enabled && document.body.classList.contains('woocommerce-checkout')) {
+        triggerAddEvents();
+    }
     var execute;
     if (wooMailerLitePublicData.checkboxSettings.preselect) {
         jQuery('#woo_ml_subscribe').prop('checked', true);
@@ -20,13 +22,17 @@ jQuery(document).ready(function(a) {
 
     const interval = setInterval(() => {
         const emailInput = document.getElementById('email');
-        if (emailInput) {
-            triggerAddEvents()
-            clearInterval(interval);
-        }
-    }, 100);
-    function triggerAddEvents() {
 
+        if (wooMailerLitePublicData.checkboxSettings.enabled && emailInput) {
+            triggerAddEvents();
+        }
+        clearInterval(interval);
+    }, 500);
+
+    function triggerAddEvents() {
+        if (document.getElementById('woo_ml_subscribe')) {
+            return false;
+        }
         allowedInputs.forEach((val, key) => {
             if (!foundEmail && val.match('email')) {
                 email = document.querySelector('#' + val)

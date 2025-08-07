@@ -193,6 +193,9 @@ class WooMailerLiteAdminWizardController extends WooMailerLiteController
     }
     public function getDebugLogs()
     {
+        if (!function_exists('shell_exec')) {
+            return $this->response(['log' => 'shell_exec function not enabled in php config.'], 400);
+        }
         $this->validate('nonce');
         $errorPath = ini_get('error_log');
         $lines = '';

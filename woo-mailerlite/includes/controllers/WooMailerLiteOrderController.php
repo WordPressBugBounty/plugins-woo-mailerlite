@@ -25,7 +25,7 @@ class WooMailerLiteOrderController extends WooMailerLiteController
                 return true;
             }
 
-            if ($cart->subscribe) {
+            if ((isset($cart->subscribe) && $cart->subscribe) || WooMailerLiteOptions::get("settings.checkoutHidden")) {
                 $order->add_meta_data('_woo_ml_subscribe', true);
             }
 
@@ -56,8 +56,8 @@ class WooMailerLiteOrderController extends WooMailerLiteController
 
             $orderCustomer = [
                 'email' => $customer->email ?? $order->get_billing_email(),
-                'create_subscriber' => (bool)$cart->subscribe,
-                'accepts_marketing' => (bool)$cart->subscribe,
+                'create_subscriber' => (bool)$cart->subscribe ?? WooMailerLiteOptions::get("settings.checkoutHidden"),
+                'accepts_marketing' => (bool)$cart->subscribe ?? WooMailerLiteOptions::get("settings.checkoutHidden"),
                 'subscriber_fields' => $customerFields,
                 'total_spent' => ($customer->total_spent ?? $order->get_total()),
                 'orders_count' => ($customer->orders_count ?? 1),

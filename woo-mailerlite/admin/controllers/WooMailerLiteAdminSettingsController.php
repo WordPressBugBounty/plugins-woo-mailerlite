@@ -81,33 +81,33 @@ class WooMailerLiteAdminSettingsController extends WooMailerLiteController
                     $product->tracked = true;
                     $product->save();
                 }
-            }
-            $ignoredProducts = WooMailerLiteOptions::get('ignored_products', []);
-            if ($this->request('ml_ignore_product')) {
-                $product->ignored = true;
-                $ignoredProducts[$product->resource_id] = $product->name;
-            } else {
-                $product->ignored = false;
+                $ignoredProducts = WooMailerLiteOptions::get('ignored_products', []);
+                if ($this->request('ml_ignore_product')) {
+                    $product->ignored = true;
+                    $ignoredProducts[$product->resource_id] = $product->name;
+                } else {
+                    $product->ignored = false;
 
-                unset($ignoredProducts[$product->resource_id]);
-            }
-            $product->save();
+                    unset($ignoredProducts[$product->resource_id]);
+                }
+                $product->save();
 
-            WooMailerLiteOptions::update('ignored_products', $ignoredProducts);
-            if ($this->apiClient()->isClassic()) {
-                $this->apiClient()->setConsumerData([
-                    'store'           => home_url(),
-                    'currency'        => get_option('woocommerce_currency'),
-                    'ignore_list'     => array_map('strval', array_keys(WooMailerLiteOptions::get('ignored_products', []))),
-                    'consumer_key'    => WooMailerLiteOptions::get('consumerKey', null),
-                    'consumer_secret' => WooMailerLiteOptions::get('consumerSecret', null),
-                    'group_id'        => WooMailerLiteOptions::get('group.id'),
-                    'resubscribe'     => WooMailerLiteOptions::get('settings.resubscribe'),
-                    'create_segments' => false
-                ]);
-            } else {
-                $product->exclude_from_automations = $product->ignored;
-                $this->apiClient()->syncProduct(WooMailerLiteOptions::get('shopId'), $product->toArray());
+                WooMailerLiteOptions::update('ignored_products', $ignoredProducts);
+                if ($this->apiClient()->isClassic()) {
+                    $this->apiClient()->setConsumerData([
+                        'store'           => home_url(),
+                        'currency'        => get_option('woocommerce_currency'),
+                        'ignore_list'     => array_map('strval', array_keys(WooMailerLiteOptions::get('ignored_products', []))),
+                        'consumer_key'    => WooMailerLiteOptions::get('consumerKey', null),
+                        'consumer_secret' => WooMailerLiteOptions::get('consumerSecret', null),
+                        'group_id'        => WooMailerLiteOptions::get('group.id'),
+                        'resubscribe'     => WooMailerLiteOptions::get('settings.resubscribe'),
+                        'create_segments' => false
+                    ]);
+                } else {
+                    $product->exclude_from_automations = $product->ignored;
+                    $this->apiClient()->syncProduct(WooMailerLiteOptions::get('shopId'), $product->toArray());
+                }
             }
             return true;
         }
@@ -117,10 +117,12 @@ class WooMailerLiteAdminSettingsController extends WooMailerLiteController
     {
         if ((did_action('created_product_cat') === 1) || (did_action('edited_product_cat') === 1)) {
             $category = $this->resolveResource(WooMailerLiteCategory::class, $categoryId);
-            $response = $this->apiClient()->syncCategory($category->toArray());
-            if ($response->success) {
-                $category->tracked = true;
-                $category->save();
+            if ($category) {
+                $response = $this->apiClient()->syncCategory($category->toArray());
+                if ($response->success) {
+                    $category->tracked = true;
+                    $category->save();
+                }
             }
         }
         return true;

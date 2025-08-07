@@ -95,6 +95,9 @@ class WooMailerLiteService
 
     public function sendCart()
     {
+        if (WooMailerLiteOptions::get('settings.syncAfterCheckout')) {
+            return true;
+        }
         $checkoutData = WooMailerLiteCheckoutDataService::getCheckoutData();
         $customer = WooMailerLiteSession::getMLCustomer();
         $customerQuery = WooMailerLiteCustomer::where('email', $customer['customer']['email'])->first();

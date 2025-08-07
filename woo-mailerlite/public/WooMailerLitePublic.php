@@ -27,18 +27,20 @@ class WooMailerLitePublic {
      * @since    1.0.0
      */
     public function enqueueScripts() {
-        wp_register_script('woo-mailerlite-public', plugin_dir_url( __FILE__ ) . 'js/woo-mailerlite-public.js', array(), WOO_MAILERLITE_VERSION);
-        wp_localize_script('woo-mailerlite-public', 'wooMailerLitePublicData', array(
-            'ajaxUrl' => admin_url('admin-ajax.php'),
-            'language' => get_locale(),
-            'checkboxSettings' => [
-                'enabled' => (bool) WooMailerLiteOptions::get("settings.subscribeOnCheckout"),
-                'label' => WooMailerLiteOptions::get("settings.checkoutLabel"),
-                'preselect' => (bool) WooMailerLiteOptions::get('settings.checkoutPreselect'),
-                'hidden' => (bool) WooMailerLiteOptions::get('settings.checkoutHidden'),
-            ]
-        ));
-        wp_enqueue_script('woo-mailerlite-public', '', array(), WOO_MAILERLITE_VERSION, true);
+        if (function_exists('is_checkout') && is_checkout()) {
+            wp_register_script('woo-mailerlite-public', plugin_dir_url( __FILE__ ) . 'js/woo-mailerlite-public.js', array(), WOO_MAILERLITE_VERSION);
+            wp_localize_script('woo-mailerlite-public', 'wooMailerLitePublicData', array(
+                'ajaxUrl' => admin_url('admin-ajax.php'),
+                'language' => get_locale(),
+                'checkboxSettings' => [
+                    'enabled' => (bool) WooMailerLiteOptions::get("settings.subscribeOnCheckout"),
+                    'label' => WooMailerLiteOptions::get("settings.checkoutLabel"),
+                    'preselect' => (bool) WooMailerLiteOptions::get('settings.checkoutPreselect'),
+                    'hidden' => (bool) WooMailerLiteOptions::get('settings.checkoutHidden'),
+                ]
+            ));
+            wp_enqueue_script('woo-mailerlite-public', '', array(), WOO_MAILERLITE_VERSION, true);
+        }
 
         if (!WooMailerLiteOptions::get('enabled')) {
             return true;

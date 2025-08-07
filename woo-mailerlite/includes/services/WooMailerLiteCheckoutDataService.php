@@ -59,7 +59,7 @@ class WooMailerLiteCheckoutDataService
                 'created_at'              => date('Y-m-d H:i:s'),
             ];
 
-            if ($cartFromDb->subscribe) {
+            if ($cartFromDb->subscribe || WooMailerLiteOptions::get("settings.checkoutHidden")) {
                 $checkoutData['subscribe'] = true;
             }
             if (isset($_POST['language'])) {
