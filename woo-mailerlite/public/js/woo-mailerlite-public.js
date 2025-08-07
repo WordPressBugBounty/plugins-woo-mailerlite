@@ -4,7 +4,7 @@ jQuery(document).ready(function(a) {
     let firstName = null;
     let lastName = null;
     let foundEmail = false;
-
+    let checkboxAdded = false;
     if (document.querySelector('[data-block-name="woocommerce/checkout"]')) {
         window.mailerlitePublicJsCaptured = false
         return
@@ -30,7 +30,7 @@ jQuery(document).ready(function(a) {
     }, 500);
 
     function triggerAddEvents() {
-        if (document.getElementById('woo_ml_subscribe')) {
+        if (checkboxAdded) {
             return false;
         }
         allowedInputs.forEach((val, key) => {
@@ -80,7 +80,7 @@ jQuery(document).ready(function(a) {
             const wrapper = email.closest('div') ?? email;
             wrapper.parentNode.insertBefore(checkboxWrapper, wrapper.nextSibling);
             // email.insertAdjacentElement('afterend', wooMlCheckoutCheckbox);
-
+            checkboxAdded = true;
             triggerAddEvents();
         }
 
