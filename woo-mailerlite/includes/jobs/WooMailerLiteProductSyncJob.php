@@ -21,8 +21,17 @@ class WooMailerLiteProductSyncJob extends WooMailerLiteAbstractJob
             if ((trim($product->url) === '') || !is_string($product->url)) {
                 continue;
             }
-
-            error_log('Product: ' . $product->name);
+            if (!$product->name) {
+                $productObj = wc_get_product( $product->resource_id );
+                $productName = $productObj->get_name();
+                if (!$productName) {
+                    $product->tracked = true;
+                    $product->save();
+                    continue;
+                }
+                $product->name = $productName;
+                $product->price = $productObj->get_price();
+            }
 
             $syncProducts[] = array_filter([
                 'resource_id' => (string)$product->resource_id,

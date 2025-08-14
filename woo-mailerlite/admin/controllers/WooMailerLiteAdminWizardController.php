@@ -102,7 +102,8 @@ class WooMailerLiteAdminWizardController extends WooMailerLiteController
             WooMailerLiteOptions::update('group', ['id' => $response->data->id, 'name' => $response->data->name]);
         }
 
-        $shopName = get_bloginfo('name') ?? home_url();
+        $shopName = get_bloginfo('name');
+        $shopName = !empty($shopName) ? $shopName : home_url();
         $shopId = WooMailerLiteOptions::get('shopId');
         $popupsEnabled = WooMailerLiteOptions::get('popupsEnabled');
         $currency = get_option('woocommerce_currency');
@@ -144,8 +145,9 @@ class WooMailerLiteAdminWizardController extends WooMailerLiteController
             ];
         }
 
-        $this->apiClient()->toggleShop(parse_url($store, PHP_URL_HOST), 1);
+        $this->apiClient()->toggleShop($store, 1);
         $response = $this->apiClient()->setConsumerData($data);
+
         if ($response->success) {
             WooMailerLiteOptions::updateMultiple([
                 'wizardStep'=> 2,

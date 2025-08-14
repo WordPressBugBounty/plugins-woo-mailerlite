@@ -130,7 +130,7 @@ class WooMailerLiteOrderController extends WooMailerLiteController
                         $response->data->customer->subscriber->updated_at = $response->data->date_updated;
                     }
                 }
-                if ($response->data->customer->subscriber->created_at == $response->data->customer->subscriber->updated_at) {
+                if (isset($response->data->customer->subscriber) && ($response->data->customer->subscriber->created_at == $response->data->customer->subscriber->updated_at)) {
                     $order->add_meta_data('_woo_ml_subscribed', true);
                 } else {
                     $order->add_meta_data('_woo_ml_already_subscribed', true);

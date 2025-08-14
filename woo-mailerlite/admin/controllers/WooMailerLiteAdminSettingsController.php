@@ -226,8 +226,7 @@ class WooMailerLiteAdminSettingsController extends WooMailerLiteController
 
     public function resetIntegration()
     {
-        $shop = parse_url(home_url(), PHP_URL_HOST);
-        $this->apiClient()->toggleShop($shop, 0);
+        $this->apiClient()->toggleShop(home_url(), 0);
         WooMailerLiteProductSyncResetJob::dispatchSync();
         WooMailerLiteOptions::deleteAll();
         WooMailerLiteMigration::rollback();
