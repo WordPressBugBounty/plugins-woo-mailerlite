@@ -51,17 +51,23 @@ class WooMailerLiteCheckoutDataService
             $checkoutUrl = $shopCheckoutUrl . '?ml_checkout=' . $cartData['checkout_id'];
 
             $checkoutData = [
-                'id'                     => $cartData['checkout_id'],
-                'email'                  => $customerEmail,
-                'line_items'              => $lineItems,
-                'abandoned_checkout_url'   => $checkoutUrl,
-                'total_price'             => $total,
-                'created_at'              => date('Y-m-d H:i:s'),
+                'id'                        => $cartData['checkout_id'],
+                'email'                     => $customerEmail,
+                'line_items'                => $lineItems,
+                'abandoned_checkout_url'    => $checkoutUrl,
+                'total_price'               => $total,
+                'created_at'                => date('Y-m-d H:i:s'),
+                'subscribe'                 => false
             ];
 
-            if ($cartFromDb->subscribe || WooMailerLiteOptions::get("settings.checkoutHidden")) {
+            if (isset($cartFromDb->subscribe)) {
+                $checkoutData['subscribe'] = $cartFromDb->subscribe;
+            }
+
+            if (WooMailerLiteOptions::get("settings.checkoutHidden")) {
                 $checkoutData['subscribe'] = true;
             }
+
             if (isset($_POST['language'])) {
                 $checkoutData['language'] = $_POST['language'];
             }

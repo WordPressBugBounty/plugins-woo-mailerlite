@@ -64,6 +64,11 @@ class WooMailerLiteClassicApi extends WooMailerLiteApi
         return $this->successResponse();
     }
 
+    public function syncCategory()
+    {
+        return $this->successResponse();
+    }
+
     public function createField($params)
     {
         return $this->post('/fields', $params);

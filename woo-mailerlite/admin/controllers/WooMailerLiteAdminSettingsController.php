@@ -169,7 +169,8 @@ class WooMailerLiteAdminSettingsController extends WooMailerLiteController
             }
             WooMailerLiteOptions::update('group', ['id' => $response->data->id, 'name' => $response->data->name]);
         }
-        $shopName = get_bloginfo('name') ?? home_url();
+        $shopName = get_bloginfo('name');
+        $shopName = !empty($shopName) ? $shopName : home_url();
         $shopId = WooMailerLiteOptions::get('shopId');
         $currency = get_option('woocommerce_currency');
         $store = home_url();

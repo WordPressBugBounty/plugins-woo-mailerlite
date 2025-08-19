@@ -53,11 +53,17 @@ class WooMailerLiteOrderController extends WooMailerLiteController
             }
 
             $customerFields = array_intersect_key($filteredCustomerData, array_flip($syncFields));
-
+            $subscribe = false;
+            if (isset($cart->subscribe)) {
+                $subscribe = $cart->subscribe;
+            }
+            if (WooMailerLiteOptions::get("settings.checkoutHidden")) {
+                $subscribe = true;
+            }
             $orderCustomer = [
                 'email' => $customer->email ?? $order->get_billing_email(),
-                'create_subscriber' => (bool)$cart->subscribe ?? WooMailerLiteOptions::get("settings.checkoutHidden"),
-                'accepts_marketing' => (bool)$cart->subscribe ?? WooMailerLiteOptions::get("settings.checkoutHidden"),
+                'create_subscriber' => (bool)$subscribe,
+                'accepts_marketing' => (bool)$subscribe,
                 'subscriber_fields' => $customerFields,
                 'total_spent' => ($customer->total_spent ?? $order->get_total()),
                 'orders_count' => ($customer->orders_count ?? 1),
