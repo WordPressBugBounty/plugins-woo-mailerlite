@@ -18,8 +18,7 @@
         if (!MailerLiteWooActive) {
             return el(
                 'div',
-                {},
-            )
+            );
         }
 
         const { LOCALE } = settings
@@ -173,7 +172,13 @@
             }
         }
 
-        return MailerLiteWooHidden ? MailerLiteHiddenCheckbox() : MailerLiteCheckbox();
+        return el(
+            'div',
+            {
+                'data-block-name': 'mailerlite-block/woo-mailerlite',
+            },
+            MailerLiteWooHidden ? MailerLiteHiddenCheckbox() : MailerLiteCheckbox()
+        );
     };
 
     const checkoutOptions = {

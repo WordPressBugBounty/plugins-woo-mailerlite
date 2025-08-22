@@ -12,7 +12,8 @@ class WooMailerLiteCart extends WooMailerLiteModel
         'subscribe',
     ];
 
-    protected $format = [
-      'data' => 'array'
-    ];
+	protected $format = [
+		'data' => 'array',
+		'subscribe' => 'boolean',
+	];
 }

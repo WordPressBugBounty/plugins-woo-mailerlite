@@ -62,8 +62,8 @@ class WooMailerLiteOrderController extends WooMailerLiteController
             }
             $orderCustomer = [
                 'email' => $customer->email ?? $order->get_billing_email(),
-                'create_subscriber' => (bool)$subscribe,
-                'accepts_marketing' => (bool)$subscribe,
+                'create_subscriber' => $subscribe,
+                'accepts_marketing' => $subscribe,
                 'subscriber_fields' => $customerFields,
                 'total_spent' => ($customer->total_spent ?? $order->get_total()),
                 'orders_count' => ($customer->orders_count ?? 1),
@@ -130,7 +130,7 @@ class WooMailerLiteOrderController extends WooMailerLiteController
                     $cart->delete();
                 }
                 if ($this->apiClient()->isClassic()) {
-                    $response = $this->apiClient()->searchSubscriber('gaurang+testabandonedcart40@mailerlite.com');
+                    $response = $this->apiClient()->searchSubscriber($customer->email);
                     if ($response->success) {
                         $response->data->customer->subscriber->created_at = $response->data->date_created;
                         $response->data->customer->subscriber->updated_at = $response->data->date_updated;

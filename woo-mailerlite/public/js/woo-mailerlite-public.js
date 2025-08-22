@@ -5,19 +5,24 @@ jQuery(document).ready(function(a) {
     let lastName = null;
     let foundEmail = false;
     let checkboxAdded = false;
+    let mailerLiteCheckoutBlockActive = null;
+
     if (document.querySelector('[data-block-name="woocommerce/checkout"]')) {
-        window.mailerlitePublicJsCaptured = false
-        return
+        window.mailerlitePublicJsCaptured = false;
     } else {
-        window.mailerlitePublicJsCaptured = true
+        window.mailerlitePublicJsCaptured = true;
     }
+
     if (wooMailerLitePublicData.checkboxSettings.enabled && document.body.classList.contains('woocommerce-checkout')) {
         triggerAddEvents();
     }
+
     var execute;
+
     if (wooMailerLitePublicData.checkboxSettings.preselect) {
         jQuery('#woo_ml_subscribe').prop('checked', true);
     }
+
     if (wooMailerLitePublicData?.checkboxSettings?.enabled) {
         let retryCount = 0;
         const maxRetries = 20;
@@ -35,9 +40,17 @@ jQuery(document).ready(function(a) {
     }
 
     function triggerAddEvents() {
-        if (checkboxAdded) {
+
+        const mailerLiteCheckoutBlockWrapper = document.querySelector('[data-block-name="mailerlite-block/woo-mailerlite"]');
+
+        if(mailerLiteCheckoutBlockWrapper && mailerLiteCheckoutBlockWrapper.querySelector('#woo_ml_subscribe')) {
+            mailerLiteCheckoutBlockActive = true;
+        }
+
+        if (checkboxAdded || (mailerLiteCheckoutBlockActive !== null && mailerLiteCheckoutBlockActive)) {
             return false;
         }
+
         allowedInputs.forEach((val, key) => {
             if (!foundEmail && val.match('email')) {
                 email = document.querySelector('#' + val)
@@ -58,35 +71,45 @@ jQuery(document).ready(function(a) {
             }
         })
 
-        const signup = document.querySelector('#woo_ml_subscribe');
-        if (email !== null && !email.form?.querySelector('#woo_ml_subscribe')) {
+        let signup = document.getElementById('woo_ml_subscribe');
 
-            if (!document.getElementById('woo_ml_subscribe')) {
-                const checkboxWrapper = document.createElement('div');
-                checkboxWrapper.className = 'woo-ml-subscribe-wrapper';
-                checkboxWrapper.style.marginTop = '15px';
-                const wooMlCheckoutCheckbox = document.createElement('input');
-                wooMlCheckoutCheckbox.setAttribute('id', 'woo_ml_subscribe');
-                wooMlCheckoutCheckbox.setAttribute('type', 'checkbox');
-                wooMlCheckoutCheckbox.setAttribute('value', wooMailerLitePublicData.checkboxSettings.preselect ? 1 : 0);
-                wooMlCheckoutCheckbox.setAttribute('checked', wooMailerLitePublicData.checkboxSettings.preselect ? 'checked' : '');
+        if (email !== null && !signup) {
+            const checkboxWrapper = document.createElement('div');
+            checkboxWrapper.className = 'woo-ml-subscribe-wrapper';
+            checkboxWrapper.style.marginTop = '1rem';
+            const wooMlCheckoutCheckbox = document.createElement('input');
+            wooMlCheckoutCheckbox.setAttribute('id', 'woo_ml_subscribe');
+            wooMlCheckoutCheckbox.setAttribute('type', 'checkbox');
+            wooMlCheckoutCheckbox.setAttribute('value', wooMailerLitePublicData.checkboxSettings.preselect ? 1 : 0);
+            wooMlCheckoutCheckbox.setAttribute('checked', wooMailerLitePublicData.checkboxSettings.preselect ? 'checked' : '');
 
+            if (!wooMailerLitePublicData.checkboxSettings.hidden) {
+                const label = document.createElement('label');
 
-                if (!wooMailerLitePublicData.checkboxSettings.hidden) {
-                    const label = document.createElement('label');
-                    label.htmlFor = 'woo-ml-subscribe-checkbox';
-                    label.textContent = wooMailerLitePublicData.checkboxSettings.label ?? 'Yes, I want to receive your newsletter.';
-                    checkboxWrapper.appendChild(wooMlCheckoutCheckbox);
-                    checkboxWrapper.appendChild(label);
-                    // Insert the container after the email field’s wrapper
-                    // email.closest('p').insertAdjacentElement('afterend', container);
-                }
-                const wrapper = email.closest('div') ?? email;
-                wrapper.parentNode.insertBefore(checkboxWrapper, wrapper.nextSibling);
-                // email.insertAdjacentElement('afterend', wooMlCheckoutCheckbox);
-                checkboxAdded = true;
-                triggerAddEvents();
+                label.style.cursor = 'pointer';
+                label.style.display = 'inline-flex';
+                label.style.alignItems = 'center';
+                label.style.gap = '0.5rem';
+                label.htmlFor = 'woo_ml_subscribe';
+
+                // Create text span for the label
+                const labelText = document.createElement('span');
+                labelText.textContent = wooMailerLitePublicData.checkboxSettings.label ?? 'Yes, I want to receive your newsletter.';
+
+                // Append checkbox first, then text
+                label.appendChild(wooMlCheckoutCheckbox);
+                label.appendChild(labelText);
+                checkboxWrapper.appendChild(label);
+                // Insert the container after the email field’s wrapper
+                // email.closest('p').insertAdjacentElement('afterend', container);
             }
+
+            const wrapper = email.closest('div') ?? email;
+            wrapper.parentNode.insertBefore(checkboxWrapper, wrapper.nextSibling);
+            // email.insertAdjacentElement('afterend', wooMlCheckoutCheckbox);
+            signup = document.getElementById('woo_ml_subscribe');
+            checkboxAdded = true;
+            triggerAddEvents();
         }
 
         if (email !== null) {

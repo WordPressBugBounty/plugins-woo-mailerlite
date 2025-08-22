@@ -65,6 +65,9 @@ class WooMailerLiteQueryBuilder extends WooMailerLiteDBConnection
                         case 'array':
                             $model->attributes[$key] = json_decode($model->attributes[$key], true);
                             break;
+	                    case 'boolean':
+		                    $model->attributes[$key] = (bool) $model->attributes[$key];
+		                    break;
                     }
                 }
             }

@@ -115,4 +115,19 @@ class WooMailerLiteClassicApi extends WooMailerLiteApi
     {
         return $this->get('/subscribers/' . $email);
     }
+
+    public function syncCustomers($data)
+    {
+        return $this->successResponse();
+    }
+
+    public function importCategories()
+    {
+        return $this->successResponse();
+    }
+
+    public function importProducts()
+    {
+        return $this->successResponse();
+    }
 }
