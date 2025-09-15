@@ -22,7 +22,7 @@ class WooMailerLiteCustomer extends WooMailerLiteModel
         'country',
         'zip',
         'last_order_id',
-        'last_order'
+        'last_order',
     ];
 
     /**
@@ -33,12 +33,13 @@ class WooMailerLiteCustomer extends WooMailerLiteModel
     {
         $prefix = db()->prefix;
 
-        $query = static::builder()->select("wp_wc_customer_lookup.customer_id,
-        wp_wc_customer_lookup.email,
-        max(wp_wc_order_stats.order_id) AS last_order_id,
-        max(wp_wc_order_stats.date_created) AS last_order,
-        count(DISTINCT wp_wc_order_stats.order_id) AS orders_count,
-        sum(wp_wc_order_stats.total_sales) AS total_spent, 
+        $query = static::builder()->select("
+        {$prefix}wc_customer_lookup.customer_id,
+        {$prefix}wc_customer_lookup.email,
+        max({$prefix}wc_order_stats.order_id) AS last_order_id,
+        max({$prefix}wc_order_stats.date_created) AS last_order,
+        count(DISTINCT {$prefix}wc_order_stats.order_id) AS orders_count,
+        sum({$prefix}wc_order_stats.total_sales) AS total_spent, 
         CASE WHEN (
                         SELECT
                             wpm.meta_value

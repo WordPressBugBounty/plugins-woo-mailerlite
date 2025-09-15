@@ -90,9 +90,10 @@ class WooMailerLiteAdminWizardController extends WooMailerLiteController
             'nonce'
         ]);
 
-        if (!$this->apiClient()->isReWrite() && !$this->validateClassicConsumerKeys($this->request['consumerKey'], $this->request['consumerSecret'])) {
-            return $this->response(['message' => 'Invalid consumer key or secret'], 400);
-        }
+        // temp removing checking keys
+//        if (!$this->apiClient()->isReWrite() && !$this->validateClassicConsumerKeys($this->request['consumerKey'], $this->request['consumerSecret'])) {
+//            return $this->response(['message' => 'Invalid consumer key or secret'], 400);
+//        }
 
         if (!WooMailerLiteOptions::get('group') || (!empty(WooMailerLiteOptions::get('group', [])) && WooMailerLiteOptions::get('group')['id'] != $this->validated['group'])) {
             $response = $this->apiClient()->getGroupById($this->validated['group']);

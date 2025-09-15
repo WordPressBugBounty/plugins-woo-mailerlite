@@ -52,7 +52,7 @@ class WooMailerLiteAdmin
             $response = WooMailerLiteApi::client()->ping();
             if ($response->status === 401) {
                 $falseApi = true;
-                WooMailerLiteOptions::deleteAll();
+//                WooMailerLiteOptions::deleteAll();
             } else {
                 WooMailerLiteCache::set('valid_api', true, 86400);
             }

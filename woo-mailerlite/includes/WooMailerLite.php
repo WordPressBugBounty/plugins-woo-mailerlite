@@ -70,7 +70,7 @@ class WooMailerLite {
         $this->define_admin_hooks();
         $this->define_public_hooks();
         $this->setupWooMailerLite();
-        $this->handleUpgrade();
+//        $this->handleUpgrade();
     }
     /**
      * Register all of the hooks related to the admin area functionality

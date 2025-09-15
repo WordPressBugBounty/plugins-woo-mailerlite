@@ -47,6 +47,10 @@ trait WooMailerLiteResources
         $collection = new WooMailerLiteCollection();
         switch ($this->resource) {
             case 'WooMailerLiteProduct':
+                if (isset($this->args['id'])) {
+                    $this->args['include'] = [$this->args['id']];
+                    unset($this->args['id']);
+                }
                 $this->args = array_merge([
                     'limit' => -1,
                     'return' => 'objects',

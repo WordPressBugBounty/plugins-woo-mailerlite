@@ -6,12 +6,16 @@ jQuery(document).ready(function(a) {
     let foundEmail = false;
     let checkboxAdded = false;
     let mailerLiteCheckoutBlockActive = null;
+    let listeningEvents = false;
 
-    if (document.querySelector('[data-block-name="woocommerce/checkout"]')) {
-        window.mailerlitePublicJsCaptured = false;
-    } else {
-        window.mailerlitePublicJsCaptured = true;
-    }
+
+    // temporarily forcefully picking this js not blocks one
+    window.mailerlitePublicJsCaptured = true;
+    // if (document.querySelector('[data-block-name="woocommerce/checkout"]')) {
+    //     window.mailerlitePublicJsCaptured = false;
+    // } else {
+    //     window.mailerlitePublicJsCaptured = true;
+    // }
 
     if (wooMailerLitePublicData.checkboxSettings.enabled && document.body.classList.contains('woocommerce-checkout')) {
         triggerAddEvents();
@@ -47,7 +51,7 @@ jQuery(document).ready(function(a) {
             mailerLiteCheckoutBlockActive = true;
         }
 
-        if (checkboxAdded || (mailerLiteCheckoutBlockActive !== null && mailerLiteCheckoutBlockActive)) {
+        if (listeningEvents && (checkboxAdded || (mailerLiteCheckoutBlockActive !== null && mailerLiteCheckoutBlockActive))) {
             return false;
         }
 
@@ -113,6 +117,7 @@ jQuery(document).ready(function(a) {
         }
 
         if (email !== null) {
+            listeningEvents = true;
             email.addEventListener('change', (event) => {
                 validateMLSub(event);
             });
@@ -179,8 +184,8 @@ jQuery(document).ready(function(a) {
                     email: email.value ?? null,
                     signup: accept_marketing,
                     language: wooMailerLitePublicData.language,
-                    name: firstName.value ?? '',
-                    last_name: lastName.value ?? '',
+                    name: firstName?.value ?? '',
+                    last_name: lastName?.value ?? '',
                     cookie_mailerlite_checkout_token:getCookie('mailerlite_checkout_token')
                 }
             });

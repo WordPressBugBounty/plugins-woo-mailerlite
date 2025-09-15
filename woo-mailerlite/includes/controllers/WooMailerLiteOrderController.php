@@ -20,8 +20,15 @@ class WooMailerLiteOrderController extends WooMailerLiteController
                     ->first();
             }
             $cart = WooMailerLiteCart::where('email', $order->get_billing_email())->first();
-
-            if (!$cart || !$customer) {
+            if (!$cart) {
+                $cart = WooMailerLiteCart::where('hash', WooMailerLiteSession::getMLCartHash())->first();
+                if ($cart instanceof WooMailerLiteCart) {
+                    $cart->update([
+                        'email' => $order->get_billing_email(),
+                    ]);
+                }
+            }
+            if (!$cart && !$customer) {
                 return true;
             }
 
@@ -122,12 +129,18 @@ class WooMailerLiteOrderController extends WooMailerLiteController
                 }
 
             } else {
-                $response = $this->apiClient()->syncOrder(WooMailerLiteOptions::get('shopId'), $orderId, $orderCustomer, $cartData, $order->get_status(), $order->get_total(), $order->get_date_created()->format('Y-m-d H:i:s'));
+                $date = null;
+                if ($order->get_date_created()) {
+                    $date = $order->get_date_created()->format('Y-m-d H:i:s');
+                }
+                $response = $this->apiClient()->syncOrder(WooMailerLiteOptions::get('shopId'), $orderId, $orderCustomer, $cartData, $order->get_status(), $order->get_total(), $date);
             }
             if (isset($response) && $response->success) {
                 $order->add_meta_data('_woo_ml_order_data_submitted', true);
-                if (in_array($order->get_status(), ['wc-completed', 'wc-processing','completed','processing'])) {
-                    $cart->delete();
+                if (in_array($order->get_status(), ['wc-completed', 'wc-processing','completed','processing']) && !empty($cart)) {
+                    if ($cart instanceof WooMailerLiteCart) {
+                        $cart->delete();
+                    }
                 }
                 if ($this->apiClient()->isClassic()) {
                     $response = $this->apiClient()->searchSubscriber($customer->email);
