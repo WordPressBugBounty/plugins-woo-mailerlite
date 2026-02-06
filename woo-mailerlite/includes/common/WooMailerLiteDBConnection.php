@@ -42,6 +42,11 @@ class WooMailerLiteDBConnection
 
     protected $hasWhere = false;
 
+    protected $countOnly = false;
+
+
+    private $columnsOnly = false;
+
     /**
      * @var string|null $table
      */
@@ -62,7 +67,11 @@ class WooMailerLiteDBConnection
             require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
             $result = dbDelta($this->query);
         } else {
-            $result = $this->db()->get_results($this->query);
+            if ($this->columnsOnly) {
+                $result = $this->db()->get_col($this->query);
+            } else {
+                $result = $this->db()->get_results($this->query);
+            }
         }
         return $result;
     }
@@ -108,11 +117,13 @@ class WooMailerLiteDBConnection
 
     public function count()
     {
+        $this->countOnly = true;
         $data = $this->get();
+        $this->countOnly = false;
         if ($data instanceof WooMailerLiteCollection) {
             return $data->count();
         } else {
-            return is_array($data) ? count($data) : 0;
+            return is_array($data) ? count($data) : (is_int($data) ? $data : 0);
         }
     }
 
@@ -125,5 +136,11 @@ class WooMailerLiteDBConnection
     {
         static::db_connection_instance()->withRelation = $relation;
         return static::db_connection_instance();
+    }
+
+    public function columnsOnly()
+    {
+        $this->columnsOnly = true;
+        return $this;
     }
 }

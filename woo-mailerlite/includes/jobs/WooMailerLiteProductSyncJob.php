@@ -2,18 +2,18 @@
 
 class WooMailerLiteProductSyncJob extends WooMailerLiteAbstractJob
 {
-    protected $maxRetries = 10;
-    protected $retryDelay = 10;
-
     public function handle($data = [])
     {
         $products = WooMailerLiteProduct::untracked()->get(100);
         $syncProducts = [];
-
         if (!$products->hasItems()) {
-            self::$jobModel->delete();
-            WooMailerLiteCategorySyncJob::dispatch($data);
+            WooMailerLiteCustomerSyncJob::dispatch($data);
             return;
+        }
+
+        $countInCache = WooMailerLiteCache::get('resource_sync_counts', false);
+        if (isset($countInCache['products'])) {
+            $countInCache = $countInCache['products'];
         }
 
         foreach ($products->items as $product) {
@@ -32,6 +32,13 @@ class WooMailerLiteProductSyncJob extends WooMailerLiteAbstractJob
                 $product->name = $productName;
                 $product->price = $productObj->get_price();
             }
+            if (!is_string($product->description)) {
+                $product->description = '';
+            }
+            if ($product->description !== '' && ctype_space($product->description)) {
+                $product->description = '';
+            }
+
 
             $syncProducts[] = array_filter([
                 'resource_id' => (string)$product->resource_id,
@@ -51,12 +58,11 @@ class WooMailerLiteProductSyncJob extends WooMailerLiteAbstractJob
 
         if (!empty($syncProducts)) {
             WooMailerLiteApi::client()->importProducts($syncProducts);
-        }
-
-        if (WooMailerLiteProduct::getUntrackedProductsCount()) {
-            static::dispatch($data);
+            if (WooMailerLiteProduct::getUntrackedProductsCount() < $countInCache) {
+                static::dispatch($data);
+            }
         } else {
-            WooMailerLiteCategorySyncJob::dispatch($data);
+            WooMailerLiteCustomerSyncJob::dispatch($data);
         }
     }
 }

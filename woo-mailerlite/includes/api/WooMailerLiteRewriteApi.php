@@ -56,10 +56,18 @@ class WooMailerLiteRewriteApi extends WooMailerLiteApi
         return $this->post('/ecommerce/shops/' . WooMailerLiteOptions::get('shopId') . '/categories/import?with_resource_id', $categories);
     }
 
-    public function syncProduct($shopId, $data)
+    public function syncProduct($shopId, $data, $replaceCategories = false)
     {
-        return $this->post('/ecommerce/shops/' . $shopId . '/products?with_resource_id',
+        $response = $this->post('/ecommerce/shops/' . $shopId . '/products?with_resource_id',
             $data);
+        if ($replaceCategories && isset($data['resource_id']) && isset($data['category_ids'])) {
+            $response = $this->put('/ecommerce/shops/' . $shopId . '/products/' . $data['resource_id'] . '/categories/multiple?with_resource_id',
+                [
+                    'replace'    => true,
+                    'categories' => $data['category_ids']
+                ]);
+        }
+        return $response;
     }
 
     public function syncCustomers($customers)
@@ -164,5 +172,10 @@ class WooMailerLiteRewriteApi extends WooMailerLiteApi
             'url'     => $shop,
             'enabled' => $state
         ]);
+    }
+
+    public function deleteProduct($productId)
+    {
+        return $this->delete('/ecommerce/shops/' . WooMailerLiteOptions::get('shopId') . '/products/' . $productId . '?with_resource_id');
     }
 }

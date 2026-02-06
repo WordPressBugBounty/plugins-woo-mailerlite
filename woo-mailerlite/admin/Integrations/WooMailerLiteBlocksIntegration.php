@@ -98,6 +98,15 @@ class WooMailerLiteBlocksIntegration implements Automattic\WooCommerce\Blocks\In
             return false;
         }
 
+        wp_localize_script(
+            'mailerlite-block-woo-mailerlite-block-frontend',
+            'wooMailerLiteBlockData',
+            [
+                'ajaxUrl' => admin_url('admin-ajax.php'),
+                'nonce'   => wp_create_nonce('woo_mailerlite_cart_nonce'),
+            ]
+        );
+
         return true;
     }
 

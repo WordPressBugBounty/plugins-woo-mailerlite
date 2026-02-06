@@ -126,6 +126,7 @@
                 }
                 checkoutMLSub({
                     action: "woo_mailerlite_set_cart_email",
+                    nonce: wooMailerLitePublicData.nonce,
                     email: email.value,
                     signup: document.querySelector('#woo_ml_subscribe').checked,
                     language: LOCALE.siteLocale,

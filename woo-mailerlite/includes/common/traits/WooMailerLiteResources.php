@@ -40,7 +40,7 @@ trait WooMailerLiteResources
 
     /**
      * Get all resources
-     * @return void|WooMailerLiteCollection
+     * @return void|WooMailerLiteCollection|int
      */
     public function resource_all($count = 0)
     {
@@ -56,6 +56,14 @@ trait WooMailerLiteResources
                     'return' => 'objects',
                 ], $this->args);
 
+                if ($this->args['limit'] == -1) {
+                    $this->args = array_merge($this->args, [
+                        'paginate' => true,
+                        'return' => 'ids',
+                        'status' => 'publish',
+                    ]);
+                    return (int) (new WC_Product_Query($this->args))->get_products()->total;
+                }
                 $items = (new WC_Product_Query($this->args))->get_products();
                 break;
 
@@ -185,6 +193,37 @@ trait WooMailerLiteResources
     public function setArgs($args)
     {
         $this->args = array_merge($this->args, $args);
+        $prefix = $this->db()->prefix;
+        $this->select = "{$prefix}posts.ID";
+        if (isset($args['meta_query'][0]['key']) && ($args['meta_query'][0]['key'] !== '_woo_ml_category_tracked')) {
+            return $this;
+        }
+        if (isset($args['metaQuery'][0]['value']) && ($args['metaQuery'][0]['value'] === true) && ($args['metaQuery'][0]['key'] === '_woo_ml_product_tracked')) {
+            $this->leftJoin('postmeta', [
+                'posts.id' => "postmeta.post_id",
+                'postmeta.meta_key' => '_woo_ml_product_tracked'
+            ])
+            ->where('posts.post_type', 'product')
+            ->where('posts.post_status', 'publish')
+                ->andCombine(function($query) {
+                    $query->where('postmeta.meta_value', '1')
+                        ->orWhere('postmeta.meta_value', true);
+                })
+            ->columnsOnly();
+            return $this;
+        }
+        $this->leftJoin('postmeta', [
+            'posts.id' => "postmeta.post_id",
+            'postmeta.meta_key' => '_woo_ml_product_tracked'
+            ])
+            ->where('posts.post_type', 'product')
+            ->where('posts.post_status', 'publish')
+            ->andCombine(function($query) {
+                $query->where('postmeta.meta_value', '0')
+                      ->orWhere('postmeta.meta_value', null)
+                      ->orWhere('postmeta.meta_value', false);
+            })
+            ->columnsOnly();
         return $this;
     }
 
@@ -192,14 +231,23 @@ trait WooMailerLiteResources
     {
         switch ($resource) {
             case 'WooMailerLiteProduct':
-                $data['resource_id'] = (string) $item->get_id();
+                $variableProduct = $item->is_type('variation') ?? false;
+                $data['resource_id'] = (string) ($variableProduct ? $item->get_parent_id() : $item->get_id());
                 $data['url'] = get_permalink($item->get_id());
+                $data['name'] = $item->get_name();
+                $data['price'] = floatval($item->get_price());
+                $data['url'] = get_permalink( $item->get_id() );
+                $data['category_ids'] = $item->get_category_ids();
                 $data['image'] = (string) wp_get_attachment_image_url($item->get_image_id(), 'full');
+                $data['description'] = $item->get_description();
+                $data['short_description'] = $item->get_short_description();
+                $data['status'] = $item->get_status();
                 $data['ignored'] = get_post_meta($data['resource_id'], '_woo_ml_product_ignored', true);
                 $data['tracked'] = get_post_meta($data['resource_id'], '_woo_ml_product_tracked', true);
                 break;
             case 'WooMailerLiteCategory':
                 $data['resource_id'] = (string) $item->term_id;
+                $data['name'] = $item->name;
                 $data['tracked'] = get_term_meta($item->term_id, '_woo_ml_category_tracked', true);
                 break;
             case 'WooMailerLiteCustomer':
@@ -251,7 +299,7 @@ trait WooMailerLiteResources
 
                 $this->customerResourceCount[$email] = [
                     'customer_id' => $data['customer_id'] ?? $this->counter,
-                    'resource_id' => $item->get_customer_id(),
+                    'resource_id' => $data['customer_id'] ?? $this->counter,
                     'email' => $item->get_billing_email(),
                     'name' => $item->get_billing_first_name(),
                     'last_name' => $item->get_billing_last_name(),
@@ -274,6 +322,8 @@ trait WooMailerLiteResources
 
     public function customTableEnabled()
     {
+        // temporarily because it works
+        return true;
         if ($this->model->isResource) {
             return false;
         }

@@ -1,5 +1,15 @@
 jQuery(document).ready(function(a) {
-    const allowedInputs = ['billing_email', 'billing_first_name', 'email', 'billing_last_name', 'woo_ml_subscribe', 'billing-first_name', 'billing-last_name', 'shipping-first_name', 'shipping-last_name'];
+    const allowedInputs = [
+        'billing_email',
+        'billing_first_name',
+        'email',
+        'billing_last_name',
+        'woo_ml_subscribe',
+        'billing-first_name',
+        'billing-last_name',
+        'shipping-first_name',
+        'shipping-last_name'
+    ];
     let email = null;
     let firstName = null;
     let lastName = null;
@@ -7,15 +17,10 @@ jQuery(document).ready(function(a) {
     let checkboxAdded = false;
     let mailerLiteCheckoutBlockActive = null;
     let listeningEvents = false;
-
+    let iteratorInterrupt = 0;
 
     // temporarily forcefully picking this js not blocks one
     window.mailerlitePublicJsCaptured = true;
-    // if (document.querySelector('[data-block-name="woocommerce/checkout"]')) {
-    //     window.mailerlitePublicJsCaptured = false;
-    // } else {
-    //     window.mailerlitePublicJsCaptured = true;
-    // }
 
     if (wooMailerLitePublicData.checkboxSettings.enabled && document.body.classList.contains('woocommerce-checkout')) {
         triggerAddEvents();
@@ -44,10 +49,13 @@ jQuery(document).ready(function(a) {
     }
 
     function triggerAddEvents() {
-
+        iteratorInterrupt++;
+        if (iteratorInterrupt >= 5) {
+            return false;
+        }
         const mailerLiteCheckoutBlockWrapper = document.querySelector('[data-block-name="mailerlite-block/woo-mailerlite"]');
 
-        if(mailerLiteCheckoutBlockWrapper && mailerLiteCheckoutBlockWrapper.querySelector('#woo_ml_subscribe')) {
+        if (mailerLiteCheckoutBlockWrapper && mailerLiteCheckoutBlockWrapper.querySelector('#woo_ml_subscribe')) {
             mailerLiteCheckoutBlockActive = true;
         }
 
@@ -55,7 +63,7 @@ jQuery(document).ready(function(a) {
             return false;
         }
 
-        allowedInputs.forEach((val, key) => {
+        allowedInputs.forEach((val) => {
             if (!foundEmail && val.match('email')) {
                 email = document.querySelector('#' + val)
                 if (email) {
@@ -73,7 +81,7 @@ jQuery(document).ready(function(a) {
                     lastName = document.querySelector('#' + val);
                 }
             }
-        })
+        });
 
         let signup = document.getElementById('woo_ml_subscribe');
 
@@ -84,89 +92,89 @@ jQuery(document).ready(function(a) {
             const wooMlCheckoutCheckbox = document.createElement('input');
             wooMlCheckoutCheckbox.setAttribute('id', 'woo_ml_subscribe');
             wooMlCheckoutCheckbox.setAttribute('type', 'checkbox');
+            wooMlCheckoutCheckbox.setAttribute('name', 'woo_ml_subscribe');
             wooMlCheckoutCheckbox.setAttribute('value', wooMailerLitePublicData.checkboxSettings.preselect ? 1 : 0);
-            wooMlCheckoutCheckbox.setAttribute('checked', wooMailerLitePublicData.checkboxSettings.preselect ? 'checked' : '');
+            if (wooMailerLitePublicData.checkboxSettings.preselect) {
+                wooMlCheckoutCheckbox.setAttribute('checked', 'checked');
+            }
 
-            if (!wooMailerLitePublicData.checkboxSettings.hidden) {
-                const label = document.createElement('label');
+            const label = document.createElement('label');
+            label.style.cursor = 'pointer';
+            label.style.display = 'inline-flex';
+            label.style.alignItems = 'center';
+            label.style.gap = '0.5rem';
+            label.htmlFor = 'woo_ml_subscribe';
+            if (wooMailerLitePublicData.checkboxSettings.hidden) {
+                label.style.display = 'none';
+            }
 
-                label.style.cursor = 'pointer';
-                label.style.display = 'inline-flex';
-                label.style.alignItems = 'center';
-                label.style.gap = '0.5rem';
-                label.htmlFor = 'woo_ml_subscribe';
+            const labelText = document.createElement('span');
+            labelText.textContent = wooMailerLitePublicData.checkboxSettings.label ?? 'Yes, I want to receive your newsletter.';
 
-                // Create text span for the label
-                const labelText = document.createElement('span');
-                labelText.textContent = wooMailerLitePublicData.checkboxSettings.label ?? 'Yes, I want to receive your newsletter.';
-
-                // Append checkbox first, then text
-                label.appendChild(wooMlCheckoutCheckbox);
-                label.appendChild(labelText);
-                checkboxWrapper.appendChild(label);
-                // Insert the container after the email field’s wrapper
-                // email.closest('p').insertAdjacentElement('afterend', container);
+            label.appendChild(wooMlCheckoutCheckbox);
+            label.appendChild(labelText);
+            checkboxWrapper.appendChild(label);
+            if (wooMailerLitePublicData.checkboxSettings.hidden) {
+                wooMlCheckoutCheckbox.setAttribute('type', 'hidden');
             }
 
             const wrapper = email.closest('div') ?? email;
             wrapper.parentNode.insertBefore(checkboxWrapper, wrapper.nextSibling);
-            // email.insertAdjacentElement('afterend', wooMlCheckoutCheckbox);
             signup = document.getElementById('woo_ml_subscribe');
             checkboxAdded = true;
-            triggerAddEvents();
         }
 
-        if (email !== null) {
+        if (email !== null && !listeningEvents) {
             listeningEvents = true;
+
+            document.addEventListener('change', (event) => {
+                if (event.target && event.target.matches('input[name="billing_email"]')) {
+                    validateMLSub(event);
+                }
+            });
+
             email.addEventListener('change', (event) => {
                 validateMLSub(event);
             });
-        }
 
-        if (firstName !== null) {
-            firstName.addEventListener('change', (event) => {
+            if (firstName !== null) {
+                firstName.addEventListener('change', (event) => {
+                    if (firstName.value.length > 0) {
+                        validateMLSub(event);
+                    }
+                });
+            }
 
-                if(firstName.value.length > 0) {
-                    validateMLSub(event);
-                }
-            });
-        }
+            if (lastName !== null) {
+                lastName.addEventListener('change', (event) => {
+                    if (lastName.value.length > 0) {
+                        validateMLSub(event);
+                    }
+                });
+            }
 
-        if (lastName !== null) {
-            lastName.addEventListener('change', (event) => {
-                if(lastName.value.length > 0) {
-                    validateMLSub(event);
-                }
-            });
-        }
-
-        if (signup !== null) {
-            a(document).on('change', signup, function(event) {
-                if (event.target.id === 'woo_ml_subscribe') {
-                    validateMLSub(event);
-                }
-            });
+            if (signup !== null) {
+                a(document).on('change', signup, function(event) {
+                    if (event.target.id === 'woo_ml_subscribe') {
+                        validateMLSub(event);
+                    }
+                });
+            }
         }
     }
 
     function validateMLSub(e) {
-        if(email !== null && email.value.length > 0) {
+        if (email !== null && email.value.length > 0) {
             checkoutMLSub(e);
         }
     }
 
     function checkoutMLSub(e) {
-
         clearTimeout(execute);
         execute = setTimeout(() => {
             if (!allowedInputs.includes(e.target.id)) {
                 return false;
             }
-            /** set cookie before sending request to server
-             * since multiple checkout update requests can be sent
-             * and server cookies won't get updated, so send the saved
-             * cookie as a request parameter
-             **/
 
             if (!getCookie('mailerlite_checkout_token')) {
                 var now = new Date();
@@ -181,12 +189,13 @@ jQuery(document).ready(function(a) {
                 type: "post",
                 data: {
                     action: "woo_mailerlite_set_cart_email",
+                    nonce: wooMailerLitePublicData.nonce,
                     email: email.value ?? null,
                     signup: accept_marketing,
                     language: wooMailerLitePublicData.language,
                     name: firstName?.value ?? '',
                     last_name: lastName?.value ?? '',
-                    cookie_mailerlite_checkout_token:getCookie('mailerlite_checkout_token')
+                    cookie_mailerlite_checkout_token: getCookie('mailerlite_checkout_token')
                 }
             });
         }, 2);

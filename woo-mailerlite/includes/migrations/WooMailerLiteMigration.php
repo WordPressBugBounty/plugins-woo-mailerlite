@@ -77,7 +77,7 @@ class WooMailerLiteMigration
             }
             WooMailerLiteOptions::update('customTableCheck', true);
         } catch (Throwable $th) {
-            WooMailerLiteLog()->error($th->getMessage());
+            WooMailerLiteLog()->error($th->getMessage(), ['trace' => $th->getTraceAsString()]);
         }
         return true;
     }

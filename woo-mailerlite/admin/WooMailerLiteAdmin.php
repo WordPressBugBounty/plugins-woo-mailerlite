@@ -47,17 +47,17 @@ class WooMailerLiteAdmin
 
     public function wooMailerLiteSettingsPageCallback()
     {
-        $falseApi = false;
-        if (!WooMailerLiteCache::get('valid_api')) {
-            $response = WooMailerLiteApi::client()->ping();
-            if ($response->status === 401) {
-                $falseApi = true;
-//                WooMailerLiteOptions::deleteAll();
-            } else {
-                WooMailerLiteCache::set('valid_api', true, 86400);
-            }
-        }
-        $untrackedResources = WooMailerLiteCategory::getUntrackedCategoriesCount() + WooMailerLiteProduct::getUntrackedProductsCount() +  WooMailerLiteCustomer::getAll()->count();
+       $falseApi = false;
+//        if (!WooMailerLiteCache::get('valid_api')) {
+//            $response = WooMailerLiteApi::client()->ping();
+//            if ($response->status === 401) {
+//                $falseApi = true;
+////                WooMailerLiteOptions::deleteAll();
+//            } else {
+//                WooMailerLiteCache::set('valid_api', true, 86400);
+//            }
+//        }
+        $untrackedResources = WooMailerLiteProduct::getUntrackedProductsCount() +  WooMailerLiteCategory::getUntrackedCategoriesCount() +  WooMailerLiteCustomer::getUntrackedCustomersCount();
 
         wp_localize_script('woo-mailerlite-vue-cdn', 'woo_mailerlite_admin_data', [
             'ajaxUrl' => admin_url('admin-ajax.php'),
@@ -80,7 +80,8 @@ class WooMailerLiteAdmin
             ],
             'settings' => WooMailerLiteOptions::get('settings', []),
             'syncFields' => WooMailerLiteOptions::get('syncFields'),
-            'asyncSync' => class_exists('ActionScheduler'),
+            // Need better solution for async sync, adding true for now and force sync (works)
+            'asyncSync' => WooMailerLiteCache::get('scheduled_jobs') && $untrackedResources,
             'falseApi' => $falseApi,
             'debugMode' => WooMailerLiteOptions::get('debugMode')
         ]);
@@ -118,7 +119,7 @@ class WooMailerLiteAdmin
         switch ($column) {
             case 'name' :
                 ?>
-                <div class="hidden ml_ignore_product_inline" id="ml_ignore_product_inline_<?php echo $post_id; ?>">
+                <div class="hidden ml_ignore_product_inline" id="ml_ignore_product_inline_<?=intval($post_id) ?>">
                     <div id="_ml_ignore_product"><?php echo array_key_exists($post_id, $ignoredProducts) ? 'yes' : 'no' ?></div>
                 </div>
                 <?php

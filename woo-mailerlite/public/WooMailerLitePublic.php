@@ -31,6 +31,7 @@ class WooMailerLitePublic {
             wp_register_script('woo-mailerlite-public', plugin_dir_url( __FILE__ ) . 'js/woo-mailerlite-public.js', array(), WOO_MAILERLITE_VERSION);
             wp_localize_script('woo-mailerlite-public', 'wooMailerLitePublicData', array(
                 'ajaxUrl' => admin_url('admin-ajax.php'),
+                'nonce' => wp_create_nonce('woo_mailerlite_cart_nonce'),
                 'language' => get_locale(),
                 'checkboxSettings' => [
                     'enabled' => (bool) WooMailerLiteOptions::get("settings.subscribeOnCheckout"),
@@ -43,6 +44,9 @@ class WooMailerLitePublic {
         }
 
         if (!WooMailerLiteOptions::get('enabled')) {
+            return true;
+        }
+        if (is_plugin_active("official-mailerlite-sign-up-forms/mailerlite.php")) {
             return true;
         }
         if (WooMailerLiteApi::client()->isRewrite()) {

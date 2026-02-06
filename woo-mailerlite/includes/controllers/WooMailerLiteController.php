@@ -21,10 +21,24 @@ class WooMailerLiteController
         return static::$instance[$class];
     }
 
+    /**
+     * @return $this
+     */
+    protected function authorize()
+    {
+        if (!current_user_can('manage_options')) {
+            wp_send_json(['success' => false,  'error' => true, 'message' => 'Unauthorized'], 403);
+        }
+        
+        $this->validate('nonce');
+
+        return $this;
+    }
+
     public function validate($validations)
     {
         try {
-            if ($validations === 'nonce') {
+            if ($validations === 'nonce' || (is_array($validations) && in_array('nonce', $validations))) {
                 check_ajax_referer('woo_mailerlite_admin', 'nonce');
             }
 
@@ -35,50 +49,54 @@ class WooMailerLiteController
             $skipSometimes = false;
             $keysToUnset = [];
 
-            foreach ($validations as $key => $validation) {
+            if (is_array($validations)) {
+                foreach ($validations as $key => $validation) {
 
-                if (is_array($validation)) {
-                    if ($skipSometimes === $key) {
-                        continue;
-                    }
-
-                    if (strpos($key, '.') !== false) {
-                        $needle = explode('.', $key);
-                        if (!is_array($this->request[$needle[0]])) {
-                            $this->sanitizeRequestKey($needle[0]);
+                    if (is_array($validation)) {
+                        if ($skipSometimes === $key) {
+                            continue;
                         }
 
-                        if (isset($this->request[$needle[0]][$needle[1]])) {
-                            $this->request[$key] = $this->request[$needle[0]][$needle[1]];
-                            $keysToUnset[] = $key;
+                        if (strpos($key, '.') !== false) {
+                            $needle = explode('.', $key);
+                            if (!is_array($this->request[$needle[0]])) {
+                                $this->sanitizeRequestKey($needle[0]);
+                            }
+
+                            if (isset($this->request[$needle[0]][$needle[1]])) {
+                                $this->request[$key] = $this->request[$needle[0]][$needle[1]];
+                                $keysToUnset[] = $key;
+                            }
+                        }
+
+                        if (in_array('required', $validation) && empty($this->request[$key])) {
+                            throw new Exception("The $key field is required.");
+                        }
+
+                        if (in_array('sometimes', $validation)) {
+                            $skipSometimes = $key;
+                            if (isset($this->request[$key]) && !empty($this->request[$key])) {
+                                $this->validated[$key] = $this->request[$key];
+                            }
+                            continue;
+                        }
+
+                        if (in_array('string', $validation) && !is_string($this->request[$key])) {
+                            throw new Exception("The $key field must be a string.");
+                        }
+
+                        if (in_array('int', $validation) && !ctype_digit(strval($this->request[$key]))) {
+                            throw new Exception("The $key field must be an integer.");
+                        }
+
+                        if (in_array('bool', $validation) && !is_bool(filter_var($this->request[$key], FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE))) {
+                            throw new Exception("The $key field must be a boolean.");
                         }
                     }
 
-                    if (in_array('required', $validation) && empty($this->request[$key])) {
-                        throw new Exception("The $key field is required.");
-                    }
-
-                    if (in_array('sometimes', $validation)) {
-                        $skipSometimes = $key;
+                    if (isset($this->request[$key])) {
                         $this->validated[$key] = $this->request[$key];
-                        continue;
                     }
-
-                    if (in_array('string', $validation) && !is_string($this->request[$key])) {
-                        throw new Exception("The $key field must be a string.");
-                    }
-
-                    if (in_array('int', $validation) && !ctype_digit(strval($this->request[$key]))) {
-                        throw new Exception("The $key field must be an integer.");
-                    }
-
-                    if (in_array('bool', $validation) && !is_bool(filter_var($this->request[$key], FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE))) {
-                        throw new Exception("The $key field must be a boolean.");
-                    }
-                }
-
-                if (isset($this->request[$key])) {
-                    $this->validated[$key] = $this->request[$key];
                 }
             }
 
@@ -92,7 +110,7 @@ class WooMailerLiteController
                 'success' => false,
                 'error' => true,
                 'message' => $e->getMessage(),
-            ]);
+            ], 403);
         }
     }
 

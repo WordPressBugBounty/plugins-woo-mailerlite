@@ -19,13 +19,14 @@ class WooMailerLiteService
         if (!empty(static::$instance)) {
             return static::$instance;
         }
+
         static::$instance = new static();
         return static::$instance;
     }
 
     /**
      * Triggered when the cart is created/updated
-     * @return void
+     * @return true
      */
     public function handleCartUpdated()
     {
@@ -38,21 +39,24 @@ class WooMailerLiteService
         }
 
         $data = json_encode($data);
+        $subscribe = textInput('signup', 'false') === 'true' ? 1 : 0;
+
         if (!$cart) {
             WooMailerLiteCart::create([
                 'hash' => WooMailerLiteSession::getMLCartHash(),
                 'email' => WooMailerLiteSession::billingEmail(),
-                'subscribe' => ($_POST['signup'] ?? false) == 'true' ? 1 : 0,
+                'subscribe' => $subscribe,
                 'data' => $data,
             ]);
 
         } else {
             $cart->update([
                 'email' => WooMailerLiteSession::billingEmail(),
-                'subscribe' => ($_POST['signup'] ?? false) == 'true' ? 1 : 0,
+                'subscribe' => $subscribe,
                 'data' => $data,
             ]);
         }
+        return true;
     }
 
     /**
@@ -61,16 +65,21 @@ class WooMailerLiteService
      */
     public function setCartEmail()
     {
-        WooMailerLiteSession::set('woo_mailerlite_checkbox', $_POST['signup'] == 'true');
+        check_ajax_referer('woo_mailerlite_cart_nonce', 'nonce');
+        $email = emailInput('email');
+        $subscribe = textInput('signup', 'false') === 'true' ? 1 : 0;
+        WooMailerLiteSession::set('woo_mailerlite_checkbox', boolval($subscribe));
         // set the customer in session
         $data = WooMailerLiteSession::cart();
         $data = json_decode($data, true);
         if (!isset($data['checkout_id'])) {
             $data['checkout_id'] = floor(microtime(true) * 1000);
         }
+
         if (!WooMailerLiteSession::getMLCartHash()) {
             $this->handleCartUpdated();
         }
+
         WooMailerLiteSession::set('woo_mailerlite_customer_data', ['customer' => $_POST, 'cart' => WC()->session->get( 'woo_mailerlite_cart_hash')]);
         // find the cart by cart id
         $cart = WooMailerLiteCart::where('hash', WooMailerLiteSession::getMLCartHash())->first();
@@ -78,15 +87,15 @@ class WooMailerLiteService
         // update email in cart
         if ($cart) {
             $cart->update([
-                'email' => $_POST['email'],
-                'subscribe' => $_POST['signup'] == 'true' ? 1 : 0,
+                'email' => $email,
+                'subscribe' => $subscribe,
             ]);
         } else {
             // create cart if it doesn't exist
             WooMailerLiteCart::create([
                 'hash' => WooMailerLiteSession::getMLCartHash(),
-                'email' => $_POST['email'],
-                'subscribe' => $_POST['signup'] == 'true' ? 1 : 0,
+                'email' => $email,
+                'subscribe' => $subscribe,
                 'data' => $data,
             ]);
         }
@@ -98,8 +107,8 @@ class WooMailerLiteService
         if (WooMailerLiteOptions::get('settings.syncAfterCheckout')) {
             return true;
         }
-        $checkoutData = WooMailerLiteCheckoutDataService::getCheckoutData();
         $customer = WooMailerLiteSession::getMLCustomer();
+        $checkoutData = WooMailerLiteCheckoutDataService::getCheckoutData($customer['customer']['email'] ?? null);
         $customerQuery = WooMailerLiteCustomer::where('email', $customer['customer']['email'])->first();
         try {
             if (self::instance()->apiClient->isClassic()) {
@@ -109,11 +118,9 @@ class WooMailerLiteService
             }
 
             if (self::instance()->apiClient->isRewrite()) {
-
                 $shop = WooMailerLiteOptions::get('shopId');
 
                 if ($shop === false) {
-
                     return false;
                 }
 
@@ -122,12 +129,6 @@ class WooMailerLiteService
                     'accepts_marketing' => $checkoutData['subscribe'] ?? false,
                     'create_subscriber' => $checkoutData['subscribe'] ?? false,
                 ];
-
-                if (isset($checkoutData['language'])) {
-                    $orderCustomer['subscriber_fields'] = [
-                        'subscriber_language' => $checkoutData['language'],
-                    ];
-                }
 
 
                 if (isset($checkoutData['subscriber_fields'])) {
@@ -150,6 +151,10 @@ class WooMailerLiteService
                     ARRAY_FILTER_USE_BOTH
                 );
 
+                if (isset($checkoutData['language'])) {
+                    $orderCustomer['subscriber_fields']['subscriber_language'] = $checkoutData['language'];
+                    $orderCustomer['subscriber_fields']['language'] = $checkoutData['language'];
+                }
 
                 $orderCart = [
                     'resource_id'  => (string)$checkoutData['id'],
@@ -163,7 +168,6 @@ class WooMailerLiteService
                 }
 
                 foreach ($checkoutData['line_items'] as $item) {
-
                     $product = wc_get_product($item['product_id']);
 
                     $orderCart['items'][] = [
@@ -178,8 +182,14 @@ class WooMailerLiteService
                     $checkoutData['total_price'], $checkoutData['created_at']);
             }
         } catch (\Exception $e) {
+            WooMailerLiteLog()->error('sendCart', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
             return false;
         }
+
         return true;
     }
 }

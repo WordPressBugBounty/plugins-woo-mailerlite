@@ -18,11 +18,14 @@ class WooMailerLiteProduct extends WooMailerLiteModel
         'ignored'
     ];
 
-    protected $isResource = true;
+    protected $isResource = false;
+
+    protected $table = 'posts';
 
     protected $format = [
         'tracked' => 'boolean',
         'image' => 'string',
+        'resource_id' => 'string',
     ];
 
     protected $removeEmpty = [
@@ -30,6 +33,13 @@ class WooMailerLiteProduct extends WooMailerLiteModel
       'short_description',
       'image',
     ];
+
+    const QUERYLIMIT = 1000;
+
+    public function __construct($attributes = [])
+    {
+        parent::__construct($attributes);
+    }
 
     public static function tracked()
     {
@@ -69,5 +79,20 @@ class WooMailerLiteProduct extends WooMailerLiteModel
     public static function getUntrackedProductsCount()
     {
         return self::untracked()->count();
+    }
+
+    public function isDeleted()
+    {
+        if (isset($this->attributes['status']) && $this->attributes['status'] === 'trash') {
+            return true;
+        }
+        
+        // If we have a resource_id, check if the post still exists
+        if (isset($this->attributes['resource_id'])) {
+            $post = get_post($this->attributes['resource_id']);
+            return !$post || $post->post_status === 'trash';
+        }
+        
+        return false;
     }
 }

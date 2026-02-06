@@ -2,7 +2,7 @@
 
 class WooMailerLiteCheckoutDataService
 {
-    public static function getCheckoutData()
+    public static function getCheckoutData($email = null)
     {
         if (empty(WC()->cart)) {
             WC()->frontend_includes();
@@ -14,12 +14,22 @@ class WooMailerLiteCheckoutDataService
         $cart = WC()->cart;
         $cartItems = $cart->get_cart();
         $customer = $cart->get_customer();
-        $cartFromDb = WooMailerLiteCart::where('hash', WooMailerLiteSession::getMLCartHash())->first();
+        if ($email) {
+            $customerEmail = $email;
+        } else {
+            $customerEmail = $customer->get_email();
+        }
+        $cartFromDb = WooMailerLiteCart::where('hash', WooMailerLiteSession::getMLCartHash())
+        ->withoutPrefix(function($query) use ($customerEmail) {
+            $query->orWhere('email', $customerEmail);
+        })->first();
+        if (!$cartFromDb) {
+            return true;
+        }
         $cartData = $cartFromDb->data;
-        $customerEmail = $customer->get_email();
 
-        if ( !$customerEmail) {
-            $customerEmail = $cartFromDb->email ?? "";
+        if (!$customerEmail) {
+            $customerEmail = $cartFromDb->email;
         }
 
         // check if email was updated recently in checkout
@@ -69,7 +79,8 @@ class WooMailerLiteCheckoutDataService
             }
 
             if (isset($_POST['language'])) {
-                $checkoutData['language'] = $_POST['language'];
+                WC()->session->set('_woo_ml_language', textInput('language'));
+                $checkoutData['language'] = textInput('language');
             }
 
             if (!empty($subscriberFields)) {

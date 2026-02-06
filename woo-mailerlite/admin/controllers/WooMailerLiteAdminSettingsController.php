@@ -28,6 +28,10 @@ class WooMailerLiteAdminSettingsController extends WooMailerLiteController
         $product->save();
 
         WooMailerLiteOptions::update('ignored_products', $ignoredProducts);
+        if ($product->isDeleted()) {
+            return $this->deleteProduct($product);
+        }
+
         if ($this->apiClient()->isClassic()) {
             $this->apiClient()->setConsumerData([
                 'store'           => home_url(),
@@ -41,7 +45,7 @@ class WooMailerLiteAdminSettingsController extends WooMailerLiteController
             ]);
         } else {
             $product->exclude_from_automations = $product->ignored;
-            $this->apiClient()->syncProduct(WooMailerLiteOptions::get('shopId'), $product->toArray());
+            $this->apiClient()->syncProduct(WooMailerLiteOptions::get('shopId'), $product->toArray(), true);
         }
         return true;
     }
@@ -76,7 +80,7 @@ class WooMailerLiteAdminSettingsController extends WooMailerLiteController
             if ($product) {
                 $product->exclude_from_automations = $product->ignored ? 1 : 0;
                 $product->categories = $product->category_ids;
-                $response = $this->apiClient()->syncProduct($shopId, $product->toArray());
+                $response = $this->apiClient()->syncProduct($shopId, $product->toArray(), true);
                 if ($response->success) {
                     $product->tracked = true;
                     $product->save();
@@ -106,7 +110,7 @@ class WooMailerLiteAdminSettingsController extends WooMailerLiteController
                     ]);
                 } else {
                     $product->exclude_from_automations = $product->ignored;
-                    $this->apiClient()->syncProduct(WooMailerLiteOptions::get('shopId'), $product->toArray());
+                    $this->apiClient()->syncProduct(WooMailerLiteOptions::get('shopId'), $product->toArray(), true);
                 }
             }
             return true;
@@ -135,19 +139,33 @@ class WooMailerLiteAdminSettingsController extends WooMailerLiteController
         }
         return true;
     }
+    
+    private function deleteProduct($product)
+    {
+        $response = $this->apiClient()->deleteProduct($product->resource_id);
+        if ($response->success) {
+            return true;
+        }
+
+        WooMailerLiteLog()->error('product:delete:failed', [
+            'product_id' => $product->resource_id,
+            'error' => $response->message ?? 'Unknown error'
+        ]);
+
+        return false;
+    }
 
     public function saveSettings()
     {
 
-        $this->validate([
-            'nonce',
+        $this->authorize()->validate([
             'settings.group' => ['required', 'int'],
             'settings.popUps' => ['sometimes', 'int'],
             'settings.syncFields' => ['required', 'array']
         ]);
 
         $currentStatus = $this->apiClient()->getDoubleOptin();
-        $currentStatus->data->double_optin = $currentStatus->data->double_optin ?? $currentStatus->data->enabled;
+        $currentStatus->data->double_optin = $currentStatus->data->double_optin ?? $currentStatus->data->enabled ?? false;
 
         if ($this->request('settings.doubleOptIn')) {
             if ($currentStatus->success) {
@@ -222,11 +240,16 @@ class WooMailerLiteAdminSettingsController extends WooMailerLiteController
                 $response->data->group = WooMailerLiteOptions::get('group');
             }
         }
-        return $this->response($response, $response->status, 'Settings saved successfully.');
+        $message = 'Settings saved successfully.';
+        if (!$response->success) {
+            $message = $response->message ?? 'Unable to set up the shop. Please try again.';
+        }
+        return $this->response($response, $response->status, $message);
     }
 
     public function resetIntegration()
-    {
+    {        
+        $this->authorize();
         $this->apiClient()->toggleShop(home_url(), 0);
         WooMailerLiteProductSyncResetJob::dispatchSync();
         WooMailerLiteOptions::deleteAll();
@@ -237,13 +260,8 @@ class WooMailerLiteAdminSettingsController extends WooMailerLiteController
 
     public function downgradePlugin()
     {
-        $this->validate([
-            'nonce',
-        ]);
-        if (!current_user_can('manage_options')) {
-            wp_die('Unauthorized');
-        }
-
+        $this->authorize();
+        
         $slug = 'woo-mailerlite';
         $version = '2.1.29';
         $zip_url = "https://downloads.wordpress.org/plugin/{$slug}.{$version}.zip";
@@ -264,7 +282,8 @@ class WooMailerLiteAdminSettingsController extends WooMailerLiteController
     }
 
     public function enableDebugMode()
-    {
+    {        
+        $this->authorize();
         WooMailerLiteOptions::update('debugMode', !WooMailerLiteOptions::get('debugMode'));
         return $this->response(['success' => true, 'message' => 'Debug mode enabled'], WooMailerLiteOptions::get('debugMode') ? 200 : 201);
     }

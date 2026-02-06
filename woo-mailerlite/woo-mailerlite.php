@@ -13,9 +13,9 @@
  *
  * @wordpress-plugin
  * Plugin Name:       MailerLite - WooCommerce integration
- * Plugin URI:        https://wordpress.org/plugins/woo-mailerlite/
+ * Plugin URI:        https://mailerlite.com
  * Description:       Official MailerLite integration for WooCommerce. Track sales and campaign ROI, import products details, automate emails based on purchases and seamlessly add your customers to your email marketing lists via WooCommerce's checkout process.
- * Version:           3.0.8
+ * Version:           3.1.9
  * Author:            MailerLite
  * Author URI:        https://mailerlite.com
  * License:           GPL-2.0+
@@ -39,7 +39,7 @@ if (!isset($woo_mailerlite_autoload) || $woo_mailerlite_autoload === false) {
  * Start at version 1.0.0 and use SemVer - https://semver.org
  * Update when you release new versions.
  */
-define( 'WOO_MAILERLITE_VERSION', '3.0.8' );
+define( 'WOO_MAILERLITE_VERSION', '3.1.9' );
 
 define('WOO_MAILERLITE_ASYNC_JOBS', false);
 
@@ -74,7 +74,7 @@ add_action('woocommerce_blocks_loaded', function () {
                     try {
                         $integration_registry->register(new WooMailerLiteBlocksIntegration());
                     } catch (Exception $e) {
-                        WooMailerLiteLog()->error($e->getMessage());
+                        WooMailerLiteLog()->error('woocommerce_blocks_loaded', ['error' => $e->getMessage(), 'trace' => $e->getTraceAsString()]);
                     }
                 }
             );
@@ -96,7 +96,7 @@ add_action( 'before_woocommerce_init', function() {
 });
 
 add_filter('auto_update_plugin', function ($update, $item) {
-    if ($item->plugin === 'woo-mailerlite/woo-mailerlite.php') {
+    if (isset($item->plugin) && $item->plugin === 'woo-mailerlite/woo-mailerlite.php') {
         return WooMailerLiteOptions::get('settings.autoUpdatePlugin');
     }
     return $update;

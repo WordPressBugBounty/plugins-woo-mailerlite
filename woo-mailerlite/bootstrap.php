@@ -120,7 +120,7 @@ function run_woo_mailerlite() {
         $plugin = new WooMailerLite();
         $plugin->run();
     } catch(Throwable $th) {
-        WooMailerLiteLog()->error($th->getMessage());
+        WooMailerLiteLog()->error('run_woo_mailerlite', ['error' => $th->getMessage(), 'trace' => $th->getTraceAsString()]);
         return true;
     }
 
@@ -169,6 +169,9 @@ function WooMailerLiteLog() {
         public function notice($message, $data = []) {
             $this->log('notice', $message, $data);
         }
+        public function info($message, $data = []) {
+            $this->log('notice', $message, $data);
+        }
 
         public function error($message, $data = []) {
             $this->log('error', $message, $data);
@@ -184,4 +187,12 @@ function WooMailerLiteLog() {
             wc_get_logger()->$action("{$message}", ['source' => 'woo_mailerlite']);
         }
     };
+}
+
+function textInput($key, $default = '') {
+    return isset($_POST[$key]) ? sanitize_text_field($_POST[$key]) : $default;
+}
+
+function emailInput($key, $default = '') {
+    return isset($_POST[$key]) ? sanitize_email($_POST[$key]) : $default;
 }

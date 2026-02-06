@@ -151,4 +151,9 @@ class WooMailerLiteModel
 	{
 		$this->isResource = true;
 	}
+
+    public function setTable($table)
+    {
+        $this->table = $table;
+    }
 }

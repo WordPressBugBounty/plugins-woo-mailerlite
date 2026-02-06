@@ -5,7 +5,7 @@ import ApiMixin from '../Api/ApiMixin.js';
 import {loadStart, loadEnd} from "../Plugins/Loader.js";
 
 const template = `
-<div v-if="syncInProgress" class="woo-ml-sync-loading-container">
+<div v-if="syncInProgress || asyncSyncInProgress" class="woo-ml-sync-loading-container">
     <strong>Sync in progress...</strong>
     <p>This will continue as long as you stay on this page.
        You can always come back, and it will start again.</p>
@@ -397,6 +397,7 @@ const Settings = {
           },
           isLoading: false,
           selectedSyncFields: [],
+          asyncSyncInProgress: woo_mailerlite_admin_data.asyncSync,
       }
     },
     mounted() {

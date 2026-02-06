@@ -73,14 +73,24 @@ class WooMailerLitePluginController extends WooMailerLiteController
 
     public function reloadCheckout()
     {
-        if (!function_exists('WC') || !is_object(WC()->session)) {
-            return false;
-        }
-        if ($this->requestHas('ml_checkout')) {
-            $cart = WooMailerLiteCart::where('data', 'like', '%'.$this->request['ml_checkout'].'%')->first();
-            if ($cart->exists()) {
-                WC()->session->set('cart', $cart->data);
+        try {
+            if (!function_exists('WC') || !is_object(WC()->session)) {
+                return false;
             }
+            if ($this->requestHas('ml_checkout')) {
+                $raw = intval($this->request['ml_checkout']);
+                $escaped = db()->esc_like($raw);
+                $escaped = '%checkout_id":' . addcslashes($escaped, '%_') . '%';
+                $cart = WooMailerLiteCart::where('data', 'like', $escaped)->first();
+                if ($cart && $cart->exists()) {
+                    $cartData = $cart->data;
+                    unset($cartData['checkout_id']);
+                    WC()->session->set('cart', $cartData);
+                }
+            }
+        } catch (Throwable $e) {
+            WooMailerLiteLog()->error('Error restoring cart from checkout ID: ' . $e->getMessage(), ['trace' => $e->getTraceAsString()]);
         }
+        return true;
     }
 }

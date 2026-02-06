@@ -109,12 +109,6 @@ class WooMailerLite {
         $this->loader->add_action('delete_product_cat', WooMailerLiteAdminSettingsController::instance(), 'deleteCategory', 10, 2);
 
 
-        function on_product_category_saved($term_id, $tt_id) {
-            $term = get_term($term_id, 'product_cat');
-
-            // Your logic here
-            error_log("Category saved: {$term->name} (ID: $term_id)");
-        }
         $this->loader->add_filter('woocommerce_product_data_tabs', $pluginAdmin, 'woo_ml_product_data_tab');
         $this->loader->add_filter('woocommerce_product_data_store_cpt_get_products_query', $pluginAdmin, 'handleCustomProductQuery', 10, 2);
         $this->loader->add_filter('plugin_action_links_woo-mailerlite/woo-mailerlite.php', $pluginAdmin, 'addSettingsOptionInPluginList');
@@ -326,6 +320,9 @@ class WooMailerLite {
         }
         if (get_option('woo_ml_key', false) && (get_option('woo_ml_wizard_setup', 0) == 2)) {
             $settings = get_option('woocommerce_mailerlite_settings', []);
+            if (!(get_option('woo_ml_key') == WooMailerLiteOptions::get('apiKey'))) {
+                return false;
+            }
             if (!empty($settings)) {
                 WooMailerLiteOptions::updateMultiple([
                     'apiKey' => get_option('woo_ml_key'),

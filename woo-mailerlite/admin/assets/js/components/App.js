@@ -31,6 +31,7 @@ const App = {
             selectedGroup: null,
             selectedFields: [],
             startSync: false,
+            manualSync: false,
         }
     },
     methods: {
@@ -42,11 +43,12 @@ const App = {
               },
               body: new URLSearchParams({
                   action: 'woo_mailerlite_sync_handler',
-                  nonce: woo_mailerlite_admin_data.woo_mailerlite_admin_nonce
+                  nonce: woo_mailerlite_admin_data.woo_mailerlite_admin_nonce,
+                  async: !this.manualSync
               }),
           });
 
-          if (response.status === 200) {
+          if ([200, 203].includes(response.status)) {
               eventBus.emit('sync-completed', true);
               clearInterval(this.interval);
           }
@@ -56,8 +58,14 @@ const App = {
         if (woo_mailerlite_admin_data.falseApi && woo_mailerlite_admin_data.currentStep > 0) {
             window.location.reload()
         }
-        if (this.startSync || ((parseInt(woo_mailerlite_admin_data.currentStep) === 2) && (woo_mailerlite_admin_data.asyncSync && woo_mailerlite_admin_data.sync.syncInProgress))) {
+        if (woo_mailerlite_admin_data.asyncSync || this.startSync || ((parseInt(woo_mailerlite_admin_data.currentStep) === 2) && woo_mailerlite_admin_data.sync.syncInProgress)) {
             this.syncProcess();
+            if (!woo_mailerlite_admin_data.asyncSync) {
+                this.interval = setInterval(() => {
+                    woo_mailerlite_admin_data.sync.syncInProgress = true
+                    this.syncProcess();
+                }, 8000);
+            }
         }
 
         eventBus.on('alert-event', (data) => {
@@ -65,6 +73,7 @@ const App = {
             window.scrollTo({ top: 0, behavior: 'smooth' });
         });
         eventBus.on('start-sync', (data) => {
+            this.manualSync = true;
             this.syncProcess();
             this.interval = setInterval(() => {
                 woo_mailerlite_admin_data.sync.syncInProgress = true

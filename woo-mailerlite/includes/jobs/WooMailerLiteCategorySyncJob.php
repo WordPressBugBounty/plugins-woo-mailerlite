@@ -5,18 +5,18 @@ class WooMailerLiteCategorySyncJob extends WooMailerLiteAbstractJob
     public function handle($data = [])
     {
         $categories = WooMailerLiteCategory::untracked()->get(100);
-
         if (!$categories->hasItems()) {
-            self::$jobModel->delete();
-            WooMailerLiteCustomerSyncJob::dispatch($data);
+            WooMailerLiteProductSyncJob::dispatch($data);
             return;
+        }
+        $countInCache = WooMailerLiteCache::get('resource_sync_counts', false);
+        if (isset($countInCache['categories'])) {
+            $countInCache = $countInCache['categories'];
         }
 
         $importCategories = [];
 
         foreach ($categories->items as $category) {
-            error_log('Category: ' . $category->name);
-
             $importCategories[] = [
                 'name' => $category->name,
                 'resource_id' => (string)$category->resource_id,
@@ -28,16 +28,11 @@ class WooMailerLiteCategorySyncJob extends WooMailerLiteAbstractJob
 
         if (!empty($importCategories)) {
             WooMailerLiteApi::client()->importCategories($importCategories);
-        }
-
-        if (static::$jobModel) {
-            static::$jobModel->delete();
-        }
-
-        if (WooMailerLiteCategory::getUntrackedCategoriesCount()) {
-            static::dispatch($data);
+            if (WooMailerLiteCategory::getUntrackedCategoriesCount() < $countInCache) {
+                static::dispatch($data);
+            }
         } else {
-            WooMailerLiteCustomerSyncJob::dispatch($data);
+            WooMailerLiteProductSyncJob::dispatch($data);
         }
     }
 }

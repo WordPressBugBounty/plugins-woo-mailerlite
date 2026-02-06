@@ -69,6 +69,26 @@ class WooMailerLiteClassicApi extends WooMailerLiteApi
         return $this->successResponse();
     }
 
+    public function deleteProduct()
+    {
+        return $this->successResponse();
+    }
+
+    public function syncCustomers($data)
+    {
+       return $this->post('/woocommerce/sync_customer', $data);
+    }
+
+    public function importCategories()
+    {
+        return $this->successResponse();
+    }
+
+    public function importProducts()
+    {
+        return $this->successResponse();
+    }
+
     public function createField($params)
     {
         return $this->post('/fields', $params);
@@ -114,20 +134,5 @@ class WooMailerLiteClassicApi extends WooMailerLiteApi
     public function searchSubscriber($email)
     {
         return $this->get('/subscribers/' . $email);
-    }
-
-    public function syncCustomers($data)
-    {
-        return $this->successResponse();
-    }
-
-    public function importCategories()
-    {
-        return $this->successResponse();
-    }
-
-    public function importProducts()
-    {
-        return $this->successResponse();
     }
 }

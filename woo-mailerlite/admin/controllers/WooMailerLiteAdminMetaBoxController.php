@@ -32,6 +32,7 @@ class WooMailerLiteAdminMetaBoxController extends WooMailerLiteController
         $orderId = $order->get_id();
         $iconYes = '<span class="dashicons dashicons-yes" style="color: #00A153;right: 7px;position: absolute;"></span>';
         $iconNo  = '<span class="dashicons dashicons-no-alt" style="color: #a00;right: 7px;position: absolute;"></span>';
+        $iconNA = '<span class="dashicons dashicons-minus" style="color: #ffb900; right: 7px; position: absolute;"></span>';
         ?>
         <?php $subscribe = $order->get_meta('_woo_ml_subscribe'); ?>
         <p>
@@ -39,19 +40,19 @@ class WooMailerLiteAdminMetaBoxController extends WooMailerLiteController
                     'woo-mailerlite') . wc_help_tip("Customer ticked the Subscribe box at the checkout stage to receive newsletters."); ?><?php echo ($subscribe) ? $iconYes : $iconNo; ?>
         </p>
         <?php $subscribed = $order->get_meta('_woo_ml_subscribed'); ?>
-        <p>
-            <?php echo _e('Subscribed to email list',
-                    'woo-mailerlite') . wc_help_tip("Customer was successfully added to the subscriber list in MailerLite."); ?><?php echo ($subscribed) ? $iconYes : $iconNo; ?>
-        </p>
         <?php $already_subscribed = $order->get_meta('_woo_ml_already_subscribed'); ?>
-        <p>
-            <?php echo _e('Previously subscribed',
-                    'woo-mailerlite') . wc_help_tip("Customer was already an existing subscriber."); ?><?php echo ($already_subscribed) ? $iconYes : $iconNo; ?>
-        </p>
         <?php $subscriber_updated = $order->get_meta('_woo_ml_subscriber_updated'); ?>
         <p>
+            <?php echo _e('Subscribed to email list',
+                    'woo-mailerlite') . wc_help_tip("Customer was successfully added to the subscriber list in MailerLite."); ?><?php echo ($subscribed) ? $iconYes : ($already_subscribed && $subscriber_updated ? $iconNA : $iconNo); ?>
+        </p>
+        <p>
+            <?php echo _e('Previously subscribed',
+                    'woo-mailerlite') . wc_help_tip("Customer was already an existing subscriber."); ?><?php echo ($already_subscribed) ? $iconYes : ($subscribe && $subscribed ? $iconNA : $iconNo); ?>
+        </p>
+        <p>
             <?php echo _e('Updated subscriber data',
-                    'woo-mailerlite') . wc_help_tip("Checkout data including purchases and contact information was successfully updated in MailerLite."); ?><?php echo ($subscriber_updated) ? $iconYes : $iconNo; ?>
+                    'woo-mailerlite') . wc_help_tip("Checkout data including purchases and contact information was successfully updated in MailerLite."); ?><?php echo ($subscriber_updated) ? $iconYes : ($subscribe && $subscribed ? $iconNA : $iconNo); ?>
         </p>
         <?php $order_data_submitted = $order->get_meta('_woo_ml_order_data_submitted'); ?>
         <p>

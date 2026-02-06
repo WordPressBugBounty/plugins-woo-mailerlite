@@ -30,14 +30,15 @@ class WooMailerLiteCategory extends WooMailerLiteModel
                 'relation' => 'OR',
                 [
                     'key'     => '_woo_ml_category_tracked',
-                    'value'   => false,
-                    'compare' => '=',
+                    'value'   => ['1', 'true', 'yes'],
+                    'compare' => 'NOT IN',
                 ],
                 [
                     'key'     => '_woo_ml_category_tracked',
                     'compare' => 'NOT EXISTS',
                 ],
-            ]
+            ],
+            'number' => -1
         ]);
     }
 

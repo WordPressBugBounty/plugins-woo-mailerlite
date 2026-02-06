@@ -34,7 +34,10 @@ class WooMailerLiteSession {
 
     public static function getMLCartHash()
     {
-        return WC()->session->get('woo_mailerlite_cart_hash');
+        if (WC()->session) {
+            return WC()->session->get('woo_mailerlite_cart_hash');
+        }
+        return null;
     }
 
     public static function getMlCheckbox()

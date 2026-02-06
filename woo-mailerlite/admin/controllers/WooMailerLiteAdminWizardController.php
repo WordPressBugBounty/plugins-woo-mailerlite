@@ -5,10 +5,7 @@ class WooMailerLiteAdminWizardController extends WooMailerLiteController
 
     public function handleConnectAccount()
     {
-        $this->validate([
-            'apiKey' => ['required', 'string'],
-            'nonce',
-        ]);
+        $this->authorize()->validate(['apiKey' => ['required', 'string']]);
         if (!WooMailerLiteCache::get('table_check')) {
             WooMailerLiteMigration::migrate();
             WooMailerLiteCache::set('table_check', true, 86400);
@@ -36,16 +33,14 @@ class WooMailerLiteAdminWizardController extends WooMailerLiteController
 
     public function getGroups()
     {
-        $this->validate('nonce');
+        $this->authorize();
         $params = [
             'limit' => 50,
             'page' => $this->request('page') ?? 1,
         ];
 
-        if ($this->apiClient()->isRewrite()) {
-            if ($this->requestHas('page') && ($this->request['page'] !== '1')) {
-                $params['offset'] = ($this->request['page'] - 1)  * $params['limit'];
-            }
+        if ($this->requestHas('page') && ($this->request['page'] !== '1')) {
+            $params['offset'] = ($this->request['page'] - 1)  * $params['limit'];
         }
 
         if ($this->requestHas('filter')) {
@@ -59,7 +54,7 @@ class WooMailerLiteAdminWizardController extends WooMailerLiteController
         $response = $this->apiClient()->getGroups($params);
         $groups = [];
         if ($response->success) {
-            if (isset($response->data)) {
+            if (isset($response->data) && is_array($response->data)) {
                 foreach ($response->data as $group) {
                     $groups['data'][] = [
                         'id' => $group->id,
@@ -71,9 +66,9 @@ class WooMailerLiteAdminWizardController extends WooMailerLiteController
                 $groups['pagination'] = [
                     'next' => (bool)$response->links->next
                 ];
-            } elseif ($this->apiClient()->isClassic() && (count($groups['data']) > 0)) {
+            } elseif ($this->apiClient()->isClassic() && (isset($groups['data']) && count($groups['data']) > 0)) {
                 $groups['pagination'] = [
-                    'next' => WooMailerLiteApi::CLASSIC_API
+                    'next' => !empty($groups)
                 ];
             }
         }
@@ -82,12 +77,11 @@ class WooMailerLiteAdminWizardController extends WooMailerLiteController
 
     public function shopSetup()
     {
-        $this->validate([
+        $this->authorize()->validate([
             'group' => ['required', 'string'],
             'syncFields' => ['required', 'array'],
             'consumerKey' => ['sometimes', 'string'],
-            'consumerSecret' => ['sometimes', 'string'],
-            'nonce'
+            'consumerSecret' => ['sometimes', 'string']
         ]);
 
         // temp removing checking keys
@@ -156,15 +150,19 @@ class WooMailerLiteAdminWizardController extends WooMailerLiteController
                 'popupsEnabled' => $response->data->enable_popups,
                 'syncFields' => $this->validated['syncFields'],
                 'enabled' => true,
-                'consumerKey' => $this->validated['consumerKey'],
-                'consumerSecret' => $this->validated['consumerSecret'],
+                'consumerKey' => $this->validated['consumerKey'] ?? null,
+                'consumerSecret' => $this->validated['consumerSecret'] ?? null,
             ]);
             if (!$response->data->group) {
                 $response->data->group = WooMailerLiteOptions::get('group');
             }
             WooMailerLiteProductSyncJob::dispatch();
         }
-        return $this->response($response, $response->status);
+        $message = '';
+        if (!$response->success) {
+            $message = $response->message ?? 'Unable to set up the shop. Please try again.';
+        }
+        return $this->response($response, $response->status, $message);
     }
 
     protected function validateClassicConsumerKeys($consumerKey, $consumerSecret) {
@@ -196,24 +194,47 @@ class WooMailerLiteAdminWizardController extends WooMailerLiteController
     }
     public function getDebugLogs()
     {
+        $this->authorize();   
         if (!function_exists('shell_exec')) {
-            return $this->response(['log' => 'shell_exec function not enabled in php config.'], 400);
+            return $this->response(['log' => 'Please enable shell_exec function in your php config.'], 200);
         }
-        $this->validate('nonce');
-        $errorPath = ini_get('error_log');
-        $lines = '';
+        
+        $errorPath = escapeshellarg(ini_get('error_log'));
+        $log = '';
         if(!empty($errorPath)) {
-            $lines = `tail -500 {$errorPath}`;
+            $log = shell_exec("tail -500 {$errorPath}");
         }
 
-        if(!empty($lines)) {
-            return $this->response(['log' => $lines], 200);
-        } else {
+        if(empty($log)) {
             $log_file = ABSPATH . 'wp-content/debug.log';
-            if (file_exists($log_file) && file_get_contents($log_file)) {
-                return $this->response(['log' => file_get_contents($log_file)], 200);
+            if (file_exists($log_file)) {
+                $log = file_get_contents($log_file);
             }
         }
-        return $this->response(['log' => 'No logs found'], 400);
+
+        if (empty($log)) {
+            $log = 'No logs found';
+        }
+
+        return $this->response(['log' => $this->redact($log)], 200);
+    }
+
+    private function redact($log)
+    {
+        $patterns = [
+            '/apiKey["\']?\s*[:=]\s*["\']?[a-zA-Z0-9_-]+["\']?/i' => 'apiKey: [REDACTED]',
+            '/api_key["\']?\s*[:=]\s*["\']?[a-zA-Z0-9_-]+["\']?/i' => 'api_key: [REDACTED]',
+            '/password["\']?\s*[:=]\s*["\']?[^"\'\s]+["\']?/i' => 'password: [REDACTED]',
+            '/consumer_?secret["\']?\s*[:=]\s*["\']?[^"\'\s]+["\']?/i' => 'consumer_secret: [REDACTED]',
+            '/consumer_?key["\']?\s*[:=]\s*["\']?[^"\'\s]+["\']?/i' => 'consumer_key: [REDACTED]',
+            '/Bearer\s+[a-zA-Z0-9_-]+/i' => 'Bearer [REDACTED]',
+            '/Authorization:\s*[^\n]+/i' => 'Authorization: [REDACTED]',
+        ];
+        
+        foreach ($patterns as $pattern => $replacement) {
+            $log = preg_replace($pattern, $replacement, $log);
+        }
+        
+        return $log;
     }
 }
