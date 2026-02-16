@@ -67,7 +67,7 @@ spl_autoload_register(function($class) {
         'WooMailerLiteResources' => 'includes/common/traits/WooMailerLiteResources.php',
         'WooMailerLiteCollection' => 'includes/common/WooMailerLiteCollection.php',
         'WooMailerLiteQueryBuilder' => 'includes/common/WooMailerLiteQueryBuilder.php',
-
+        'WooMailerLiteEncryption' => 'includes/common/WooMailerLiteEncryption.php',
 
         // includes/migrations
         'WooMailerLiteMigration' => 'includes/migrations/WooMailerLiteMigration.php',

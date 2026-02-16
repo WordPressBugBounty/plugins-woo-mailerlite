@@ -77,10 +77,10 @@ class WooMailerLitePluginController extends WooMailerLiteController
             if (!function_exists('WC') || !is_object(WC()->session)) {
                 return false;
             }
-            if ($this->requestHas('ml_checkout')) {
-                $raw = intval($this->request['ml_checkout']);
-                $escaped = db()->esc_like($raw);
-                $escaped = '%checkout_id":' . addcslashes($escaped, '%_') . '%';
+
+            if ($this->requestHas('ml_checkout') && (ctype_digit($this->request['ml_checkout']) || wp_is_uuid($this->request['ml_checkout']))) {
+                $escaped = db()->esc_like($this->request['ml_checkout']);
+                $escaped = '%checkout_id":"' . addcslashes($escaped, '%_') . '"%';
                 $cart = WooMailerLiteCart::where('data', 'like', $escaped)->first();
                 if ($cart && $cart->exists()) {
                     $cartData = $cart->data;

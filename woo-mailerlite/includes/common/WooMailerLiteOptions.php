@@ -3,6 +3,7 @@
 class WooMailerLiteOptions
 {
     private static $key = 'woo_mailerlite_options';
+    private static $apiKey = 'apiKey';
     protected static $toJson = false;
 
     public static function all()
@@ -43,6 +44,15 @@ class WooMailerLiteOptions
                 if (self::$toJson) {
                     return json_encode($options[$key]);
                 }
+
+                if ($key === self::$apiKey && !empty($options[$key])) {
+                    $decrypted = WooMailerLiteEncryption::instance()->decrypt($options[$key]);
+                    if ($decrypted !== false) {
+                        return $decrypted;
+                    } else {
+                        self::update($key, WooMailerLiteEncryption::instance()->encrypt($options[$key]));
+                    }
+                }
                 return $options[$key];
             }
             return $default;
@@ -60,6 +70,9 @@ class WooMailerLiteOptions
 
     public static function updateMultiple($data)
     {
+        if (isset($data[self::$apiKey]) && !empty($data[self::$apiKey])) {
+            $data[self::$apiKey] = WooMailerLiteEncryption::instance()->encrypt($data[self::$apiKey]);
+        }
         $options =  get_option(self::$key, []);
         $options = array_merge($options, $data);
         return update_option(self::$key, $options);

@@ -35,7 +35,7 @@ class WooMailerLiteService
         $data = WooMailerLiteSession::cart();
         $data = json_decode($data, true);
         if (!isset($data['checkout_id'])) {
-            $data['checkout_id'] = floor(microtime(true) * 1000);
+            $data['checkout_id'] = wp_generate_uuid4();
         }
 
         $data = json_encode($data);
@@ -73,7 +73,7 @@ class WooMailerLiteService
         $data = WooMailerLiteSession::cart();
         $data = json_decode($data, true);
         if (!isset($data['checkout_id'])) {
-            $data['checkout_id'] = floor(microtime(true) * 1000);
+            $data['checkout_id'] = wp_generate_uuid4();
         }
 
         if (!WooMailerLiteSession::getMLCartHash()) {

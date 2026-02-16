@@ -126,7 +126,6 @@ class WooMailerLite {
         $this->loader->add_action('wp_ajax_handle_save_settings', WooMailerLiteAdminSettingsController::instance(), 'saveSettings');
         $this->loader->add_action('wp_ajax_woo_mailerlite_reset_integration_settings', WooMailerLiteAdminSettingsController::instance(), 'resetIntegration');
         $this->loader->add_action('wp_ajax_handle_debug_log', WooMailerLiteAdminWizardController::instance(), 'getDebugLogs');
-        $this->loader->add_action('wp_ajax_woo_mailerlite_job_resolver', WooMailerLiteAdminSettingsController::instance(), 'jobResolver');
         $this->loader->add_action('wp_ajax_woo_mailerlite_downgrade_plugin', WooMailerLiteAdminSettingsController::instance(), 'downgradePlugin');
         $this->loader->add_action('wp_ajax_woo_mailerlite_enable_debug_mode', WooMailerLiteAdminSettingsController::instance(), 'enableDebugMode');
         $this->loader->add_action('add_meta_boxes', WooMailerLiteAdminMetaBoxController::instance(), 'addMetaBoxes');
