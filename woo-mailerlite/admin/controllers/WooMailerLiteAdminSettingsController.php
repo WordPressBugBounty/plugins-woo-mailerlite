@@ -75,6 +75,10 @@ class WooMailerLiteAdminSettingsController extends WooMailerLiteController
     {
         if (did_action('woocommerce_update_product') === 1) {
 
+            if (defined('ICL_SITEPRESS_VERSION') && isset($_POST['icl_translation_of']) && !empty($_POST['icl_translation_of'])) {
+                return true;
+            }
+
             $product = $this->resolveResource(WooMailerLiteProduct::class, $productId);
             $shopId = WooMailerLiteOptions::get('shopId');
             if ($product) {
@@ -84,7 +88,13 @@ class WooMailerLiteAdminSettingsController extends WooMailerLiteController
                 if ($response->success) {
                     $product->tracked = true;
                     $product->save();
+                } else {
+                    WooMailerLiteLog()->error('product:sync:failed', [
+                        'product_id' => $product->resource_id,
+                        'response' => $response
+                    ]);
                 }
+
                 $ignoredProducts = WooMailerLiteOptions::get('ignored_products', []);
                 if ($this->request('ml_ignore_product')) {
                     $product->ignored = true;
@@ -112,7 +122,12 @@ class WooMailerLiteAdminSettingsController extends WooMailerLiteController
                     $product->exclude_from_automations = $product->ignored;
                     $this->apiClient()->syncProduct(WooMailerLiteOptions::get('shopId'), $product->toArray(), true);
                 }
+            } else {
+                WooMailerLiteLog()->error('product:update:not_found', [
+                    'product_id' => $productId
+                ]);
             }
+
             return true;
         }
     }
