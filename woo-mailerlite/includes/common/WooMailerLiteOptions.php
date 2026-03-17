@@ -6,6 +6,18 @@ class WooMailerLiteOptions
     private static $apiKey = 'apiKey';
     protected static $toJson = false;
 
+    public const COMPLETE_ORDER_STATUSES = [
+        'wc-completed',
+        'wc-processing',
+        'completed',
+        'processing',
+        'wc-iscrizione-ok',
+    ];
+
+    public const PENDING_ORDER_STATUSES = [
+        'wc-pending',
+    ];
+
     public static function all()
     {
         return get_option(self::$key, []);
@@ -96,5 +108,20 @@ class WooMailerLiteOptions
     {
         self::$toJson = true;
         return new self;
+    }
+
+    public static function allSupportedOrderStatuses()
+    {
+        return array_merge(self::COMPLETE_ORDER_STATUSES, self::PENDING_ORDER_STATUSES);
+    }
+
+    public static function isCompleteOrderStatus($status)
+    {
+        return in_array($status, self::COMPLETE_ORDER_STATUSES);
+    }
+
+    public static function isPendingOrderStatus($status)
+    {
+        return in_array($status, self::PENDING_ORDER_STATUSES);
     }
 }

@@ -84,7 +84,7 @@ trait WooMailerLiteResources
                 break;
             case 'WooMailerLiteCustomer':
                     $this->args = array_merge([
-                        'status' => ['wc-completed', 'wc-processing'],
+                        'status' => WooMailerLiteOptions::COMPLETE_ORDER_STATUSES,
                         'type' => 'shop_order',
                         'orderby' => 'date',
                         'order' => 'ASC',
@@ -279,7 +279,7 @@ trait WooMailerLiteResources
                 if ($first) {
                     $orders = wc_get_orders([
                         'billing_email' => $item->get_billing_email(),
-                        'status' => ['wc-processing', 'wc-completed'],
+                        'status' => WooMailerLiteOptions::COMPLETE_ORDER_STATUSES,
                         'customer_id' => $item->get_customer_id(),
                         'limit' => -1
                     ]);

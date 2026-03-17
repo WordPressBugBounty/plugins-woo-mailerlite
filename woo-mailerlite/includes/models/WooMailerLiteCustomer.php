@@ -49,7 +49,7 @@ class WooMailerLiteCustomer extends WooMailerLiteModel
             SUM({$prefix}wc_order_stats.total_sales) AS total_spent
         ")
             ->from("wc_order_stats")
-            ->whereIn("status", ['wc-processing','wc-completed'])
+            ->whereIn("status", WooMailerLiteOptions::COMPLETE_ORDER_STATUSES)
             ->groupBy("wc_order_stats.customer_id");
 
         return static::builder()->select("
@@ -93,7 +93,7 @@ class WooMailerLiteCustomer extends WooMailerLiteModel
                 'wc_order_stats.customer_id' => 'wc_customer_lookup.customer_id',
                 'wc_order_stats.status' => [
                     'in' => [
-                        'wc-processing', 'wc-completed'
+                        WooMailerLiteOptions::COMPLETE_ORDER_STATUSES
                     ]
                 ]
             ])
@@ -125,7 +125,7 @@ class WooMailerLiteCustomer extends WooMailerLiteModel
                     count(DISTINCT ({$prefix}wc_order_stats.order_id)) AS orders_count,
                     sum(({$prefix}wc_order_stats.total_sales)) AS total_spent")
             ->join('wc_order_stats', 'wc_order_stats.customer_id', 'wc_customer_lookup.customer_id')
-            ->whereIn('wc_order_stats.status', ['wc-processing', 'wc-completed']);
+            ->whereIn('wc_order_stats.status', WooMailerLiteOptions::COMPLETE_ORDER_STATUSES);
         if (self::builder()->customTableEnabled() && $sync) {
             $query->where('wc_order_stats.customer_id', '>', WooMailerLiteOptions::get('lastSyncedCustomer', 0));
             $query->groupBy('wc_order_stats.customer_id, wp_wc_order_stats.order_id')

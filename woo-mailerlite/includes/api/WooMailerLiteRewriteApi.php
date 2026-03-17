@@ -88,14 +88,7 @@ class WooMailerLiteRewriteApi extends WooMailerLiteApi
 
     public function syncOrder($shopId, $orderId, $customer, $cart, $status, $totalPrice, $createdAt)
     {
-        $orderStatus = 'pending';
-        // if order status from woocommerce is wc-completed or wc-processing, set order status to completed
-        if (in_array($status, ['wc-completed', 'wc-processing'])) {
-            $status = 'completed';
-        } else if (in_array($status, ['completed', 'processing'])) {
-            $orderStatus = 'complete';
-        }
-
+        $orderStatus = WooMailerLiteOptions::isCompleteOrderStatus($status) ? 'complete' : 'pending';
         if ( ! isset($cart['resource_id'])) {
             $cart['resource_id'] = (string)$orderId;
         }

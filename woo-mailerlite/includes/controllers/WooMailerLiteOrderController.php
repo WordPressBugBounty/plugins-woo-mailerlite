@@ -25,7 +25,7 @@ class WooMailerLiteOrderController extends WooMailerLiteController
                 $customer = WooMailerLiteCustomer::selectAll(false)
                     ->getFromOrder()
                     ->where("email", $order->get_billing_email())
-                    ->whereIn("status", ["wc-completed", "wc-processing", "wc-pending"])
+                    ->whereIn("status", WooMailerLiteOptions::allSupportedOrderStatuses())
                     ->first();
             }
             $cart = WooMailerLiteCart::where('email', $order->get_billing_email())->first();
@@ -165,7 +165,7 @@ class WooMailerLiteOrderController extends WooMailerLiteController
 
             if (isset($response) && $response->success) {
                 $order->add_meta_data('_woo_ml_order_data_submitted', true);
-                if (in_array($order->get_status(), ['wc-completed', 'wc-processing','completed','processing']) && !empty($cart)) {
+                if (WooMailerLiteOptions::isCompleteOrderStatus($order->get_status()) && !empty($cart)) {
                     if ($cart instanceof WooMailerLiteCart) {
                         if ($this->apiClient()->isRewrite()) {
                             $this->apiClient()->deleteOrder($cart->data['checkout_id']);
