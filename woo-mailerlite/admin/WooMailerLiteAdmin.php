@@ -22,17 +22,26 @@ class WooMailerLiteAdmin
 
     public function enqueueScripts($hook)
     {
+        if ($hook === 'edit.php' && isset($_GET['post_type']) && $_GET['post_type'] === 'product') {
+            wp_enqueue_script('woo-mailerlite-quick-edit', plugin_dir_url(__FILE__) . '../admin/assets/js/ml-quick-edit.js', ['jquery', 'inline-edit-post'], null, true);
+            return;
+        }
+
         if ($hook !== 'woocommerce_page_mailerlite') {
             return;
         }
+
+        wp_dequeue_script('select2');
+        wp_deregister_script('select2');
+
         wp_enqueue_script('woo-mailerlite-vue-cdn', 'https://cdn.jsdelivr.net/npm/vue@3.5.13/dist/vue.global.prod.js', [], null, true);
         wp_localize_script('woo-mailerlite-admin', 'woo_mailerlite_admin_data', array(
             'ajax_url' => admin_url('admin-ajax.php'),
             'language' => get_locale()
         ));
 
-        wp_enqueue_script('style2-script', 'https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js');
-        wp_enqueue_script('woo-mailerlite-admin', plugin_dir_url(__FILE__) . '../admin/assets/js/ml-app.js', ['jquery', 'woo-mailerlite-vue-cdn'], null, true);
+        wp_enqueue_script('woo-mailerlite-select2', plugin_dir_url(__FILE__) . 'assets/js/lib/select2.min.js', ['jquery'], WOO_MAILERLITE_VERSION, true);
+        wp_enqueue_script('woo-mailerlite-admin', plugin_dir_url(__FILE__) . '../admin/assets/js/ml-app.js', ['jquery', 'woo-mailerlite-vue-cdn', 'woo-mailerlite-select2'], null, true);
 
     }
 
@@ -40,9 +49,52 @@ class WooMailerLiteAdmin
         if ($hook !== 'woocommerce_page_mailerlite') {
             return;
         }
+
+        wp_dequeue_style('select2');
+        wp_deregister_style('select2');
+
         wp_enqueue_style('woo-mailerlite-admin-css', plugin_dir_url( __FILE__ ) . '../admin/assets/css/admin.css', false, WOO_MAILERLITE_VERSION);
-        wp_enqueue_style('style2-style', 'https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css');
-        wp_enqueue_style('style2-mailerlite-style', plugin_dir_url( __FILE__ ) . '../public/css/mailerlite-select2.css',false, WOO_MAILERLITE_VERSION);
+        wp_enqueue_style('woo-mailerlite-select2-css', plugin_dir_url( __FILE__ ) . 'assets/css/lib/select2.min.css', false, WOO_MAILERLITE_VERSION);
+        wp_enqueue_style('woo-mailerlite-select2-theme', plugin_dir_url( __FILE__ ) . '../public/css/mailerlite-select2.css', ['woo-mailerlite-select2-css'], WOO_MAILERLITE_VERSION);
+    }
+
+    public function removeConflictingSelect2($hook)
+    {
+        if ($hook !== 'woocommerce_page_mailerlite') {
+            return;
+        }
+
+        global $wp_scripts, $wp_styles;
+
+        $scriptPatterns = ['select2', 'selectWoo', 'wc-enhanced-select'];
+
+        foreach ($wp_scripts->registered as $handle => $script) {
+            if ($handle === 'woo-mailerlite-select2') {
+                continue;
+            }
+            foreach ($scriptPatterns as $pattern) {
+                if (strpos($script->src, $pattern) !== false) {
+                    wp_dequeue_script($handle);
+                    wp_deregister_script($handle);
+                    break;
+                }
+            }
+        }
+
+        $stylePatterns = ['select2', 'selectWoo'];
+
+        foreach ($wp_styles->registered as $handle => $style) {
+            if ($handle === 'woo-mailerlite-select2-css' || $handle === 'woo-mailerlite-select2-theme') {
+                continue;
+            }
+            foreach ($stylePatterns as $pattern) {
+                if (strpos($style->src, $pattern) !== false) {
+                    wp_dequeue_style($handle);
+                    wp_deregister_style($handle);
+                    break;
+                }
+            }
+        }
     }
 
     public function wooMailerLiteSettingsPageCallback()
@@ -114,13 +166,13 @@ class WooMailerLiteAdmin
 
     public function populateIgnoreProductBlock($column, $post_id)
     {
-        $ignoredProducts = WooMailerLiteOptions::get('ignored_products', []);
 
         switch ($column) {
             case 'name' :
+                $ignoredProducts = WooMailerLiteOptions::get('ignored_products', []);
                 ?>
                 <div class="hidden ml_ignore_product_inline" id="ml_ignore_product_inline_<?=intval($post_id) ?>">
-                    <div id="_ml_ignore_product"><?php echo array_key_exists($post_id, $ignoredProducts) ? 'yes' : 'no' ?></div>
+                    <div class="_ml_ignore_product"><?php echo array_key_exists($post_id, $ignoredProducts) ? 'yes' : 'no' ?></div>
                 </div>
                 <?php
 

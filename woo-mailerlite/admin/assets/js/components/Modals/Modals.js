@@ -4,7 +4,7 @@ import {validate} from "../Plugins/Validation.js";
 import {loadStart, loadEnd} from "../Plugins/Loader.js";
 const template = `
 <!-- Create Group Modal -->
-<div v-if="openCreateGroupModal" class="woo-ml-wizard-modal" id="wooMlWizardCreateGroupModal" role="dialog">
+<div v-if="openCreateGroupModal" class="woo-ml-wizard-modal" id="wooMlWizardCreateGroupModal" role="dialog" data-testid="create-group-modal">
     <div class="woo-ml-wizard-modal-parent">
         <div class="woo-ml-wizard-modal-container">
             <div class="woo-ml-wizard-modal-content">
@@ -14,11 +14,11 @@ const template = `
                 </div>
                 <div class="woo-ml-wizard-modal-body">
                     <div class="create-group-input">
-                        <input ref="wooMlCreateGroup" type="text" name="createGroup" placeholder="Enter group name" v-model="createGroupName" class="">
+                        <input ref="wooMlCreateGroup" type="text" name="createGroup" placeholder="Enter group name" v-model="createGroupName" class="" data-testid="create-group-name-input">
                     </div>
                     <div class="modal-button-ml">
                         <button @click="openCreateGroupModal = false" type="button" class="btn-secondary-ml woo-ml-close" style="margin-right: 12px;">Close</button>
-                        <button @click="createGroup" ref="createGroup" type="button" class="btn-primary-ml"><span class="woo-ml-button-text">Create group</span></button>
+                        <button @click="createGroup" ref="createGroup" type="button" class="btn-primary-ml" data-testid="create-group-submit-btn"><span class="woo-ml-button-text">Create group</span></button>
                     </div>
                 </div>
             </div>

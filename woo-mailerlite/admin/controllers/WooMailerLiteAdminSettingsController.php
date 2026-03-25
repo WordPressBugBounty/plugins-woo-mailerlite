@@ -17,6 +17,9 @@ class WooMailerLiteAdminSettingsController extends WooMailerLiteController
         }
 
         $ignoredProducts = WooMailerLiteOptions::get('ignored_products', []);
+
+        $wasIgnored = $product->ignored;
+
         if ($this->request('ml_ignore_product')) {
             $product->ignored = true;
             $ignoredProducts[$product->resource_id] = $post->post_title;
@@ -33,16 +36,18 @@ class WooMailerLiteAdminSettingsController extends WooMailerLiteController
         }
 
         if ($this->apiClient()->isClassic()) {
-            $this->apiClient()->setConsumerData([
-                'store'           => home_url(),
-                'currency'        => get_option('woocommerce_currency'),
-                'ignore_list'     => array_map('strval', array_keys(WooMailerLiteOptions::get('ignored_products', []))),
-                'consumer_key'    => WooMailerLiteOptions::get('consumerKey', null),
-                'consumer_secret' => WooMailerLiteOptions::get('consumerSecret', null),
-                'group_id'        => WooMailerLiteOptions::get('group.id'),
-                'resubscribe'     => WooMailerLiteOptions::get('settings.resubscribe'),
-                'create_segments' => false
-            ]);
+            if ((bool)$wasIgnored !== (bool)$product->ignored) {
+                $this->apiClient()->setConsumerData([
+                    'store' => home_url(),
+                    'currency' => get_option('woocommerce_currency'),
+                    'ignore_list' => array_map('strval', array_keys(WooMailerLiteOptions::get('ignored_products', []))),
+                    'consumer_key' => WooMailerLiteOptions::get('consumerKey', null),
+                    'consumer_secret' => WooMailerLiteOptions::get('consumerSecret', null),
+                    'group_id' => WooMailerLiteOptions::get('group.id'),
+                    'resubscribe' => WooMailerLiteOptions::get('settings.resubscribe'),
+                    'create_segments' => false
+                ]);
+            }
         } else {
             $product->exclude_from_automations = $product->ignored;
             $this->apiClient()->syncProduct(WooMailerLiteOptions::get('shopId'), $product->toArray(), true);
@@ -96,6 +101,9 @@ class WooMailerLiteAdminSettingsController extends WooMailerLiteController
                 }
 
                 $ignoredProducts = WooMailerLiteOptions::get('ignored_products', []);
+
+                $wasIgnored = $product->ignored;
+
                 if ($this->request('ml_ignore_product')) {
                     $product->ignored = true;
                     $ignoredProducts[$product->resource_id] = $product->name;
@@ -108,16 +116,18 @@ class WooMailerLiteAdminSettingsController extends WooMailerLiteController
 
                 WooMailerLiteOptions::update('ignored_products', $ignoredProducts);
                 if ($this->apiClient()->isClassic()) {
-                    $this->apiClient()->setConsumerData([
-                        'store'           => home_url(),
-                        'currency'        => get_option('woocommerce_currency'),
-                        'ignore_list'     => array_map('strval', array_keys(WooMailerLiteOptions::get('ignored_products', []))),
-                        'consumer_key'    => WooMailerLiteOptions::get('consumerKey', null),
-                        'consumer_secret' => WooMailerLiteOptions::get('consumerSecret', null),
-                        'group_id'        => WooMailerLiteOptions::get('group.id'),
-                        'resubscribe'     => WooMailerLiteOptions::get('settings.resubscribe'),
-                        'create_segments' => false
-                    ]);
+                    if ((bool)$wasIgnored !== (bool)$product->ignored) {
+                        $this->apiClient()->setConsumerData([
+                            'store' => home_url(),
+                            'currency' => get_option('woocommerce_currency'),
+                            'ignore_list' => array_map('strval', array_keys(WooMailerLiteOptions::get('ignored_products', []))),
+                            'consumer_key' => WooMailerLiteOptions::get('consumerKey', null),
+                            'consumer_secret' => WooMailerLiteOptions::get('consumerSecret', null),
+                            'group_id' => WooMailerLiteOptions::get('group.id'),
+                            'resubscribe' => WooMailerLiteOptions::get('settings.resubscribe'),
+                            'create_segments' => false
+                        ]);
+                    }
                 } else {
                     $product->exclude_from_automations = $product->ignored;
                     $this->apiClient()->syncProduct(WooMailerLiteOptions::get('shopId'), $product->toArray(), true);

@@ -23,10 +23,15 @@ abstract class WooMailerLiteAbstractJob
 
     public static function dispatch(array $data = []): void
     {
+        $data['attempts'] = $data['attempts'] ?? 0;
+
+        // In local/test (e.g. wp-env), run sync immediately so jobs don't stay pending.
+        if (!isset($data['selfMechanism']['sync']) && defined('WOO_MAILERLITE_SYNC_IMMEDIATE') && WOO_MAILERLITE_SYNC_IMMEDIATE) {
+            $data['selfMechanism']['sync'] = true;
+        }
+
         $jobClass = static::class;
         $objectId = 0;
-
-        $data['attempts'] = $data['attempts'] ?? 0;
 
         if ((!isset($data['selfMechanism']['sync']) || !$data['selfMechanism']['sync']) && function_exists('as_enqueue_async_action')) {
             $objectId = as_enqueue_async_action($jobClass, [$data]);

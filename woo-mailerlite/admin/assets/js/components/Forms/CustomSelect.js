@@ -1,7 +1,7 @@
 import ApiMixin from '../Api/ApiMixin.js';
 import eventBus from "../eventBus.js";
 const template = `
-    <select ref="wooMlSubGroup" class="wc-enhanced-select">
+    <select ref="wooMlSubGroup" class="woo-ml-group-select">
         <option value="" disabled >{{ placeholder }}</option>
     </select>
 `;

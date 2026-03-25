@@ -5,7 +5,7 @@ import ApiMixin from '../Api/ApiMixin.js';
 import {loadStart, loadEnd} from "../Plugins/Loader.js";
 
 const template = `
-<div v-if="syncInProgress || asyncSyncInProgress" class="woo-ml-sync-loading-container">
+<div v-if="syncInProgress || asyncSyncInProgress" class="woo-ml-sync-loading-container" data-testid="sync-in-progress">
     <strong>Sync in progress...</strong>
     <p>This will continue as long as you stay on this page.
        You can always come back, and it will start again.</p>
@@ -19,10 +19,9 @@ const template = `
                 <div class="form-group-ml vertical">
                     <label for="wooMlSubGroup" class="settings-label mb-3-ml">Subscriber group</label>
                     <label class="input-mailerlite mb-2-ml" style="display: flex;">
-                        <custom-select 
-                            id="wooMlSubGroup" 
-                            class="wc-enhanced-select" 
-                            name="subscriber-group" 
+                        <custom-select
+                            id="wooMlSubGroup"
+                            name="subscriber-group"
                             :options="groups"
                             v-model="selectedGroup"
                             modelValue="selectedGroup"
@@ -42,9 +41,9 @@ const template = `
                         </div>
                     </label>
                     <label v-if="ignoredProducts.length !== 0" class="input-mailerlite" style="cursor: default;">
-                        <div multiple class="wc-enhanced-select" name="ignore_product_list"
+                        <div multiple name="ignore_product_list"
                              style="min-height: 26px; padding-left: 8px; display: flex; flex-direction: row; overflow: hidden; flex-wrap: wrap; padding: 4px; padding-top: 0; border: 1px solid #d1d5db; border-radius: 0.25rem;">
-                            <option v-for="(item, index) in ignoredProducts" :key="index" style="background-color: #e5e7eb; padding: 2px 5px; border-radius: 2px; font-size: 13px; margin-right: 4px; margin-top: 4px;">{{ item }}</option>
+                            <span v-for="(item, index) in ignoredProducts" :key="index" style="background-color: #e5e7eb; padding: 2px 5px; border-radius: 2px; font-size: 13px; margin-right: 4px; margin-top: 4px;">{{ item }}</span>
                         </div>
                     </label>
                     <a v-else :href="productsUrl">
@@ -75,12 +74,11 @@ const template = `
                             <span class="tooltiptext-ml">Select which fields you would like to sync. Please note that Email and Name fields are mandatory.</span>
                         </div>
                     </label>
-                    <label class="input-mailerlite">
-                        <sync-fields 
-                        id="sync_fields" 
-                        multiple="multiple" 
-                        data-placeholder="Click to select fields you want to sync" 
-                        class="wc-enhanced-select" 
+                    <label class="input-mailerlite" data-testid="settings-sync-fields">
+                        <sync-fields
+                        id="sync_fields"
+                        multiple="multiple"
+                        data-placeholder="Click to select fields you want to sync"
                         style="width: 100%;"
                         :options="syncFields"
                         v-model="selectedSyncFields"
@@ -101,7 +99,7 @@ const template = `
                             data-woo-ml-reset-resources-sync="true" ref="resetSyncBtn"><span class="woo-ml-button-text">Reset synchronized resources</span>
                     </button>
                     <button @click.prevent="startSync" v-if="totalUntrackedResources && !syncInProgress" type="button" class="btn btn-secondary-ml flex-start-ml"
-                            data-woo-ml-reset-resources-sync="true" ref="startSync"><span class="woo-ml-button-text">Synchronize {{ totalUntrackedResources }} untracked resources</span>
+                            data-woo-ml-reset-resources-sync="true" ref="startSync" data-testid="sync-untracked-resources-btn"><span class="woo-ml-button-text">Synchronize {{ totalUntrackedResources }} untracked resources</span>
                     </button>
                 </div>
             </div>
@@ -118,6 +116,7 @@ const template = `
                                name="checkout"
                                value="yes"
                                id="subscribe_checkout_checkbox"
+                               data-testid="subscribe-checkout-checkbox"
                         />
                         <label for="subscribe_checkout_checkbox" class="settings-label-medium">Enable list subscription via checkout page.</label>
                     </div>
@@ -139,9 +138,9 @@ const template = `
                     <div class="form-group-ml vertical">
                         <label for="wooMlSubGroup" class="settings-label mb-3-ml">Subscribe checkbox position</label>
                         <label class="input-mailerlite">
-                            <select 
-                              class="wc-enhanced-select" 
-                              name="checkout_position" 
+                            <select
+                              class="woo-ml-native-select"
+                              name="checkout_position"
                               :disabled="!settings.subscribeOnCheckout"
                               v-model="settings.selectedCheckoutPosition"
                             >
@@ -268,7 +267,7 @@ const template = `
         </div>
 
         <div style="display: flex; justify-content: flex-end; margin-top: 2rem;">
-            <button @click.prevent="updateSettings" :class="{ 'woo-ml-button-loading': isLoading }" :disabled="isLoading" type="submit" class="btn-primary-ml" style="margin-top: 2rem;" id="updateSettingsBtn"><span class="woo-ml-button-text">Save changes</span></button>
+            <button @click.prevent="updateSettings" :class="{ 'woo-ml-button-loading': isLoading }" :disabled="isLoading" type="submit" class="btn-primary-ml" style="margin-top: 2rem;" id="updateSettingsBtn" data-testid="update-settings-btn"><span class="woo-ml-button-text">Save changes</span></button>
         </div>
      <div class="settings-block">
     <div class="woo-ml-wizard card-between">

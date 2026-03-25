@@ -58,12 +58,7 @@ class WooMailerLiteOptions
                 }
 
                 if ($key === self::$apiKey && !empty($options[$key])) {
-                    $decrypted = WooMailerLiteEncryption::instance()->decrypt($options[$key]);
-                    if ($decrypted !== false) {
-                        return $decrypted;
-                    } else {
-                        self::update($key, WooMailerLiteEncryption::instance()->encrypt($options[$key]));
-                    }
+                    return self::handleApiKeyRetrieval($options[$key]);
                 }
                 return $options[$key];
             }
@@ -75,6 +70,15 @@ class WooMailerLiteOptions
 
     public static function update($key, $value)
     {
+        if ($key === self::$apiKey && !empty($value) && !self::isEncryptedData($value)) {
+            $encrypted = WooMailerLiteEncryption::instance()->encrypt($value);
+            if ($encrypted !== false) {
+                $value = $encrypted;
+            } else {
+                WooMailerLiteLog()->error('WooMailerLite: Encryption failed, storing as plain text temporarily.');
+            }
+        }
+
         $options =  get_option(self::$key, []);
         $options[$key] = $value;
         return update_option(self::$key, $options);
@@ -123,5 +127,28 @@ class WooMailerLiteOptions
     public static function isPendingOrderStatus($status)
     {
         return in_array($status, self::PENDING_ORDER_STATUSES);
+    }
+
+    private static function isEncryptedData($value) {
+        return is_string($value)
+            && strlen($value) > 50
+            && preg_match('/^[A-Za-z0-9+\/]+=*$/', $value)
+            && base64_decode($value, true) !== false;
+    }
+
+    private static function handleApiKeyRetrieval($value)
+    {
+        if (self::isEncryptedData($value)) {
+            $decrypted = WooMailerLiteEncryption::instance()->decrypt($value);
+            if ($decrypted !== false) {
+                return $decrypted;
+            } else {
+                WooMailerLiteLog()->error('WooMailerLite: API key decryption failed. Re-enter API key.');
+                return null;
+            }
+        } else {
+            self::update(self::$apiKey, $value);
+            return $value;
+        }
     }
 }

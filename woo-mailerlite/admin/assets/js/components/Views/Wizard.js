@@ -27,8 +27,8 @@ const template = `
         <div class="input-block-ml">
             <label for="wooMlApiKey" class="settings-label mb-3-ml">API key</label>
             <div class="api-key-input">
-                <input ref="wooMlApiKey" type="text" name="api-key" placeholder="Enter your MailerLite API key" v-model="wooMlApiKey" :disabled="isLoading">
-                <button @click="connectAccount" :class="{ 'woo-ml-button-loading': isLoading }" :disabled="isLoading" type="button" id="wooMlWizardApiKeyBtn" class="btn-primary-ml"><span class="woo-ml-button-text">Connect account</span></button>
+                <input ref="wooMlApiKey" type="text" name="api-key" placeholder="Enter your MailerLite API key" v-model="wooMlApiKey" :disabled="isLoading" data-testid="wizard-api-key">
+                <button @click="connectAccount" :class="{ 'woo-ml-button-loading': isLoading }" :disabled="isLoading" type="button" id="wooMlWizardApiKeyBtn" class="btn-primary-ml" data-testid="wizard-connect-account-btn"><span class="woo-ml-button-text">Connect account</span></button>
             </div>
             <div class="signup-link-ml">
                 <p>Don't you have a MailerLite account yet? Click to <a href="https://www.mailerlite.com/signup?utm_source=referral&utm_medium=woocommerce&utm_campaign=integration" target="_blank">Sign up</a></p>
@@ -60,16 +60,15 @@ const template = `
         <div id="woo-ml-wizard-step-two">
             <label for="wooMlSubGroup" class="settings-label mb-3-ml">Group</label>
             <label class="input-mailerlite mb-2-ml" style="display: flex;">
-                <custom-select 
-                    ref="wooMlSubGroupComponent" 
-                    class="wc-enhanced-select" 
-                    name="subscriber-group" 
+                <custom-select
+                    ref="wooMlSubGroupComponent"
+                    name="subscriber-group"
                     style="width: 100%;"
                     :options="groups"
                     v-model="selectedGroup"
                     placeholder="Select group"
                 ></custom-select>
-                <button @click="createGroup" id="createGroupModal" type="button" class="btn-secondary-ml" style="margin-left: 0.5rem; white-space: nowrap;">Create group</button>
+                <button @click="createGroup" id="createGroupModal" type="button" class="btn-secondary-ml" style="margin-left: 0.5rem; white-space: nowrap;" data-testid="wizard-create-group-btn">Create group</button>
             </label>
             
         </div>
@@ -108,13 +107,13 @@ const template = `
                     <span class="tooltiptext-ml">Select which fields you would like to sync. Please note that Email and Name fields are mandatory.</span>
                 </div>
             </label>
-            <label class="input-mailerlite">
+            <label class="input-mailerlite" data-testid="wizard-sync-fields">
                 <sync-fields 
                     id="sync_fields" 
                     multiple="multiple" 
                     v-model="selectedSyncFields" 
                     placeholder="Click to select fields you want to sync" 
-                    class="wc-enhanced-select" style="width: 100%;"
+                    style="width: 100%;"
                     :options="syncFields"
                     :model-value="selectedSyncFields"
                 />
@@ -122,7 +121,7 @@ const template = `
         </div>
 
         <div class="settings-block" style="display: flex; justify-content: space-between; padding-top: 2rem;">
-            <button @click="startImport" :class="{ 'woo-ml-button-loading': isLoading }" :disabled="isLoading" id="startImport" type="button" class="btn-primary-ml"><span class="woo-ml-button-text">Next</span></button>
+            <button @click="startImport" :class="{ 'woo-ml-button-loading': isLoading }" :disabled="isLoading" id="startImport" type="button" class="btn-primary-ml" data-testid="wizard-start-import-btn"><span class="woo-ml-button-text">Next</span></button>
         </div>
     </div>
 </div>

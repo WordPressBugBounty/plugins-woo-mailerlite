@@ -2,11 +2,26 @@
 
 class WooMailerLiteRewriteApi extends WooMailerLiteApi
 {
-    const BASE_URL = 'https://connect.mailerlite.com/api';
+    const DEFAULT_BASE_URL = 'https://connect.mailerlite.com/api';
 
     public function __construct()
     {
-        parent::__construct(self::BASE_URL);
+        $baseUrl = $this->getBaseUrl();
+        parent::__construct($baseUrl);
+    }
+
+    /**
+     * Base URL for the Rewrite API. Override for tests via MAILERLITE_API_URL env var
+     * or by defining MAILERLITE_API_URL in wp-config (e.g. wp-env config in .wp-env.json).
+     *
+     * @return string
+     */
+    private function getBaseUrl()
+    {
+        if (defined('MAILERLITE_API_URL')) {
+            return MAILERLITE_API_URL;
+        }
+        return self::DEFAULT_BASE_URL;
     }
 
     public function validateKey($key)

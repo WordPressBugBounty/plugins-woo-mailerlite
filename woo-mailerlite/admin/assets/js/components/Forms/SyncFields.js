@@ -1,5 +1,5 @@
 const template = `
-    <select v-model="setSyncFields"/>
+    <select v-model="setSyncFields" data-testid="sync-fields-select"/>
 `;
 
 const SyncFields = {

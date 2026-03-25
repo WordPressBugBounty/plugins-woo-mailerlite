@@ -114,8 +114,9 @@ class WooMailerLite {
         $this->loader->add_filter('plugin_action_links_woo-mailerlite/woo-mailerlite.php', $pluginAdmin, 'addSettingsOptionInPluginList');
         $this->loader->add_action('woocommerce_product_bulk_and_quick_edit', WooMailerLiteAdminSettingsController::instance(), 'updateIgnoreProductsBulkAndQuickEdit', 10, 2);
         $this->loader->add_filter('script_loader_tag', $pluginAdmin, 'addModuleTypeScript', 10, 3);
-        $this->loader->add_action('admin_enqueue_scripts', $pluginAdmin, 'enqueueScripts');
-        $this->loader->add_action('admin_enqueue_scripts', $pluginAdmin, 'enqueueStyles');
+        $this->loader->add_action('admin_enqueue_scripts', $pluginAdmin, 'enqueueScripts', 20);
+        $this->loader->add_action('admin_enqueue_scripts', $pluginAdmin, 'enqueueStyles', 20);
+        $this->loader->add_action('admin_enqueue_scripts', $pluginAdmin, 'removeConflictingSelect2', 9999);
         $this->loader->add_action('admin_menu', $pluginAdmin, 'addPluginAdminMenu', 71);
         $this->loader->add_action('wp_ajax_woo_mailerlite_handle_connect_account', WooMailerLiteAdminWizardController::instance(), 'handleConnectAccount');
         $this->loader->add_action('wp_ajax_woo_mailerlite_get_groups', WooMailerLiteAdminWizardController::instance(), 'getGroups');

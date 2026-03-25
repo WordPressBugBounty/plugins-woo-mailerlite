@@ -85,8 +85,8 @@ class WooMailerLiteController
                             throw new Exception("The $key field must be a string.");
                         }
 
-                        if (in_array('int', $validation) && !ctype_digit(strval($this->request[$key]))) {
-                            throw new Exception("The $key field must be an integer.");
+                        if (in_array('int', $validation) && (!ctype_digit(strval($this->request[$key])) || (int)$this->request[$key] <= 0)) {
+                            throw new Exception("The $key field must be a positive integer.");
                         }
 
                         if (in_array('bool', $validation) && !is_bool(filter_var($this->request[$key], FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE))) {
