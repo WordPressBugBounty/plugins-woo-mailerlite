@@ -101,7 +101,7 @@ class WooMailerLiteRewriteApi extends WooMailerLiteApi
         return $this->delete('/ecommerce/shops/' . WooMailerLiteOptions::get('shopId') . '/categories/' . $category . '?with_resource_id');
     }
 
-    public function syncOrder($shopId, $orderId, $customer, $cart, $status, $totalPrice, $createdAt)
+    public function syncOrder($shopId, $orderId, $customer, $cart, $status, $totalPrice, $createdAt, $stage = null)
     {
         $orderStatus = WooMailerLiteOptions::isCompleteOrderStatus($status) ? 'complete' : 'pending';
         if ( ! isset($cart['resource_id'])) {
@@ -120,6 +120,11 @@ class WooMailerLiteRewriteApi extends WooMailerLiteApi
             'total_price' => $totalPrice,
             'created_at'  => $createdAt
         ];
+
+        if ($stage !== null) {
+            $parameters['stage'] = $stage;
+        }
+
         // check if wpml is enabled and current language is not english
         if ( defined( 'ICL_SITEPRESS_VERSION' )) {
             foreach($parameters['cart']['items'] as &$product) {
@@ -133,8 +138,10 @@ class WooMailerLiteRewriteApi extends WooMailerLiteApi
                 }
             }
         }
-       return $this->post('/ecommerce/shops/' . $shopId . '/orders/queue-order-sync?with_resource_id',
-            $parameters);
+       return $this->post(
+            sprintf('/ecommerce/shops/%s/orders/queue-order-sync?with_resource_id', $shopId),
+            $parameters
+        );
     }
 
     public function deleteOrder($orderId)

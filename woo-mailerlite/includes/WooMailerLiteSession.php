@@ -24,7 +24,8 @@ class WooMailerLiteSession {
 
     public static function billingEmail()
     {
-        return WC()->cart->get_customer()->get_billing_email();
+        $customer = WC()->cart->get_customer();
+        return $customer->get_billing_email() ?: $customer->get_email();
     }
 
     public static function getMLCustomer()
@@ -43,5 +44,10 @@ class WooMailerLiteSession {
     public static function getMlCheckbox()
     {
         return WC()->session->get('woo_mailerlite_checkbox') ?? false;
+    }
+
+    public static function getMLCartStageCacheKey()
+    {
+        return sprintf('woo_ml_cart_stage:%s', self::getMLCartHash());
     }
 }

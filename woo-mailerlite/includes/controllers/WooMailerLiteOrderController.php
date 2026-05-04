@@ -141,7 +141,7 @@ class WooMailerLiteOrderController extends WooMailerLiteController
                     'checkout_data' => WooMailerLiteCheckoutDataService::getCheckoutData($order->get_billing_email())
                 ];
                 $this->apiClient()->sendOrderProcessing($data);
-                if (in_array($order->get_status(), ['completed', 'processing']) && $order->get_items()) {
+                if (WooMailerLiteOptions::isCompleteOrderStatus($order->get_status()) && $order->get_items()) {
                     $order_items = $order->get_items();
                     foreach ($order_items as $key => $value) {
                         $item_data = $value->get_data();
@@ -160,17 +160,28 @@ class WooMailerLiteOrderController extends WooMailerLiteController
                 if ($order->get_date_created()) {
                     $date = $order->get_date_created()->format('Y-m-d H:i:s');
                 }
-                $response = $this->apiClient()->syncOrder(WooMailerLiteOptions::get('shopId'), $orderId, $orderCustomer, $cartData, $order->get_status(), $order->get_total(), $date);
+
+                $stage = WooMailerLiteOptions::isCompleteOrderStatus($order->get_status()) ? null : 'checkout';
+                $response = $this->apiClient()->syncOrder(
+                    WooMailerLiteOptions::get('shopId'),
+                    $orderId,
+                    $orderCustomer,
+                    $cartData,
+                    $order->get_status(),
+                    $order->get_total(),
+                    $date,
+                    $stage
+                );
             }
 
             if (isset($response) && $response->success) {
                 $order->add_meta_data('_woo_ml_order_data_submitted', true);
-                if (WooMailerLiteOptions::isCompleteOrderStatus($order->get_status()) && !empty($cart)) {
-                    if ($cart instanceof WooMailerLiteCart) {
-                        if ($this->apiClient()->isRewrite()) {
-                            $this->apiClient()->deleteOrder($cart->data['checkout_id']);
-                        }
-                       $cart->delete();
+                if (!empty($cart) && $cart instanceof WooMailerLiteCart) {
+                    if ($this->apiClient()->isRewrite()) {
+                        $this->apiClient()->deleteOrder($cart->data['checkout_id']);
+                    }
+                    if (WooMailerLiteOptions::isCompleteOrderStatus($order->get_status())) {
+                        $cart->delete();
                     }
                 }
 
@@ -192,12 +203,12 @@ class WooMailerLiteOrderController extends WooMailerLiteController
                     $createdAt = $response->data->customer->subscriber->created_at;
                     $updatedAt = $response->data->customer->subscriber->updated_at;
                 }
-                
+
                 // We will only set the order meta when we have these dates
                 if ($createdAt && $updatedAt) {
                     $createdAt = strtotime($createdAt);
                     $updatedAt = strtotime($updatedAt);
-                    
+
                     // If the created and updated timestamps are within 60 seconds, the subscriber was just created
                     if (abs($createdAt - $updatedAt) < 60) {
                         $order->add_meta_data('_woo_ml_subscribed', true);

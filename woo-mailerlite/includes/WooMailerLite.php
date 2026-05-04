@@ -183,6 +183,7 @@ class WooMailerLite {
         $this->loader->add_action('woocommerce_cart_item_set_quantity', $service, 'handleCartUpdated');
         $this->loader->add_action('woocommerce_add_to_cart', $service, 'handleCartUpdated');
         $this->loader->add_action('woocommerce_cart_item_removed', $service, 'handleCartUpdated');
+        $this->loader->add_action('woocommerce_before_checkout_form', $service, 'handleCheckoutPage');
         $this->loader->add_action('woocommerce_order_status_changed', WooMailerLiteOrderController::instance(), 'handleOrderStatusChanged');
         $this->loader->add_action('woocommerce_saved_order_items', WooMailerLiteOrderController::instance(), 'handleOrderStatusChanged');
         $this->loader->add_action('woocommerce_order_status_completed', WooMailerLiteOrderController::instance(), 'handleOrderStatusChanged');

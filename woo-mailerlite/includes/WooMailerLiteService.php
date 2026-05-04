@@ -34,7 +34,9 @@ class WooMailerLiteService
         $cart = WooMailerLiteCart::where('hash', WooMailerLiteSession::getMLCartHash())->first();
         $data = WooMailerLiteSession::cart();
         $data = json_decode($data, true);
-        if (!isset($data['checkout_id'])) {
+        if ($cart && isset($cart->data['checkout_id'])) {
+            $data['checkout_id'] = $cart->data['checkout_id'];
+        } elseif (!isset($data['checkout_id'])) {
             $data['checkout_id'] = wp_generate_uuid4();
         }
 
@@ -56,7 +58,27 @@ class WooMailerLiteService
                 'data' => $data,
             ]);
         }
+
+        $cacheKey = WooMailerLiteSession::getMLCartStageCacheKey();
+        if (is_user_logged_in() && ! WooMailerLiteCache::get($cacheKey)) {
+            WooMailerLiteCache::set($cacheKey, true, 5);
+            $this->sendCart('cart');
+        }
+
         return true;
+    }
+
+    /**
+     * Triggered when a logged-in user visits the checkout page.
+     * Updates the cart stage to 'checkout' and syncs to MailerLite
+     * because we already have the email and other details in the session for logged-in users.
+     * @return void
+     */
+    public function handleCheckoutPage()
+    {
+        if (is_user_logged_in()) {
+            $this->sendCart();
+        }
     }
 
     /**
@@ -102,7 +124,7 @@ class WooMailerLiteService
         $this->sendCart();
     }
 
-    public function sendCart()
+    public function sendCart($stage = 'checkout')
     {
         if (WooMailerLiteOptions::get('settings.syncAfterCheckout')) {
             return true;
@@ -178,8 +200,16 @@ class WooMailerLiteService
                     ];
                 }
 
-                self::$instance->apiClient->syncOrder($shop, $checkoutData['id'], $orderCustomer, $orderCart, 'pending',
-                    $checkoutData['total_price'], $checkoutData['created_at']);
+                self::$instance->apiClient->syncOrder(
+                    $shop,
+                    $checkoutData['id'],
+                    $orderCustomer,
+                    $orderCart,
+                    'pending',
+                    $checkoutData['total_price'],
+                    $checkoutData['created_at'],
+                    $stage
+                );
             }
         } catch (\Exception $e) {
             WooMailerLiteLog()->error('sendCart', [

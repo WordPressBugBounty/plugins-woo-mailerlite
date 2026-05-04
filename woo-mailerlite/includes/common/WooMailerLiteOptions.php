@@ -12,6 +12,7 @@ class WooMailerLiteOptions
         'completed',
         'processing',
         'wc-iscrizione-ok',
+        'iscrizione-ok',
     ];
 
     public const PENDING_ORDER_STATUSES = [
