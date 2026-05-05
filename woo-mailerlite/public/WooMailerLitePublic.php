@@ -46,9 +46,7 @@ class WooMailerLitePublic {
         if (!WooMailerLiteOptions::get('enabled')) {
             return true;
         }
-        if (is_plugin_active("official-mailerlite-sign-up-forms/mailerlite.php")) {
-            return true;
-        }
+
         if (WooMailerLiteApi::client()->isRewrite()) {
             wp_enqueue_script(
                 'mailerlite-rewrite-universal',
