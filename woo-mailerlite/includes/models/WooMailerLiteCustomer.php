@@ -92,9 +92,7 @@ class WooMailerLiteCustomer extends WooMailerLiteModel
             ->join("wc_order_stats", [
                 'wc_order_stats.customer_id' => 'wc_customer_lookup.customer_id',
                 'wc_order_stats.status' => [
-                    'in' => [
-                        WooMailerLiteOptions::COMPLETE_ORDER_STATUSES
-                    ]
+                    'in' => WooMailerLiteOptions::COMPLETE_ORDER_STATUSES
                 ]
             ])
         ->where("wc_order_stats.customer_id", ">", WooMailerLiteOptions::get('lastSyncedCustomer', 0))
