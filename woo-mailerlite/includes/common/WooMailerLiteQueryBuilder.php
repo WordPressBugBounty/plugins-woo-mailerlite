@@ -50,7 +50,7 @@ class WooMailerLiteQueryBuilder extends WooMailerLiteDBConnection
             $parts = explode('.', $column, 2);
             return $this->addPrefix($parts[0]) . '.' . $this->esc($parts[1]);
         }
-        
+
         return $this->esc($column);
     }
 
@@ -272,6 +272,25 @@ class WooMailerLiteQueryBuilder extends WooMailerLiteDBConnection
         return $this;
     }
 
+    public function leftJoinAs(string $table, string $alias, array $tableLeft)
+    {
+        $tableSql = $this->addPrefix($this->esc($table));
+        $aliasSql = $this->addPrefix($this->esc($alias));
+        $joins = [];
+        foreach ($tableLeft as $key => $value) {
+            $key = $this->esc($key);
+            if (strpos($value, '.') === false) {
+                $value = $this->db()->prepare('%s', $value);
+            } else {
+                $value = $this->addPrefix($this->esc($value));
+            }
+            $joins[] = $this->addPrefix($key) . ' = ' . $value;
+        }
+        $this->query .= " LEFT JOIN {$tableSql} AS {$aliasSql} ON " . implode(' AND ', $joins);
+
+        return $this;
+    }
+
     public function andWhere($column, $operation, $value)
     {
         $operation = $this->getOperation($operation);
@@ -291,7 +310,7 @@ class WooMailerLiteQueryBuilder extends WooMailerLiteDBConnection
             $value = $operation;
             $operation = '=';
         }
-        
+
         $operation = $this->getOperation($operation);
         if (!$this->withoutPrefix) {
             $column = $this->addPrefix($column);
@@ -323,18 +342,18 @@ class WooMailerLiteQueryBuilder extends WooMailerLiteDBConnection
     }
 
     public function select($select)
-    {        
+    {
         $dangerous = [
             ';',
             '--',
             '/*',
             '*/',
         ];
-        
+
         foreach ($dangerous as $pattern) {
             $select = str_replace($pattern, '', $select);
         }
-        
+
         $dangerousKeywords = ['INSERT', 'UPDATE', 'DELETE', 'DROP', 'CREATE', 'ALTER', 'TRUNCATE', 'EXEC', 'EXECUTE'];
         foreach ($dangerousKeywords as $keyword) {
             $select = preg_replace('/\b' . $keyword . '\b/i', '', $select);

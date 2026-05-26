@@ -24,6 +24,7 @@ class WooMailerLiteCustomer extends WooMailerLiteModel
         'zip',
         'last_order_id',
         'last_order',
+        'phone'
     ];
 
     protected $format = [
@@ -56,7 +57,6 @@ class WooMailerLiteCustomer extends WooMailerLiteModel
             {$prefix}wc_customer_lookup.customer_id,
             {$prefix}wc_customer_lookup.customer_id AS resource_id,
             {$prefix}wc_customer_lookup.email,
-            CASE WHEN {$prefix}postmeta.meta_value IS NOT NULL THEN TRUE ELSE FALSE END AS create_subscriber,
             CASE WHEN {$prefix}postmeta.meta_value IS NOT NULL THEN TRUE ELSE FALSE END AS accepts_marketing,
             {$prefix}order_agg.orders_count,
             {$prefix}order_agg.total_spent,
@@ -67,6 +67,7 @@ class WooMailerLiteCustomer extends WooMailerLiteModel
             {$prefix}wc_customer_lookup.country,
             {$prefix}wc_customer_lookup.postcode AS zip,
             COALESCE({$prefix}usermeta.meta_value, '') AS company,
+            COALESCE({$prefix}usermeta_phone.meta_value, '') AS phone,
             {$prefix}order_agg.last_order_id,
             {$prefix}order_agg.last_order,
             CASE WHEN {$prefix}postmeta.meta_value IS NOT NULL THEN TRUE ELSE FALSE END AS create_subscriber
@@ -79,6 +80,10 @@ class WooMailerLiteCustomer extends WooMailerLiteModel
             ->leftJoin("usermeta", [
                 'usermeta.user_id' => 'wc_customer_lookup.user_id',
                 'usermeta.meta_key' => 'billing_company'
+            ])
+            ->leftJoinAs("usermeta", "usermeta_phone", [
+                'usermeta_phone.user_id' => 'wc_customer_lookup.user_id',
+                'usermeta_phone.meta_key' => 'billing_phone'
             ])
             ->where('order_agg.customer_id', '>', WooMailerLiteOptions::get('lastSyncedCustomer', 0))
             ->orderBy('order_agg.customer_id')->get($limit);
@@ -121,8 +126,18 @@ class WooMailerLiteCustomer extends WooMailerLiteModel
                     max({$prefix}wc_order_stats.order_id) AS last_order_id,
                     max({$prefix}wc_order_stats.date_created) AS last_order,
                     count(DISTINCT ({$prefix}wc_order_stats.order_id)) AS orders_count,
-                    sum(({$prefix}wc_order_stats.total_sales)) AS total_spent")
+                    sum(({$prefix}wc_order_stats.total_sales)) AS total_spent,
+                    ANY_VALUE(COALESCE({$prefix}usermeta.meta_value, '')) AS company,
+                    ANY_VALUE(COALESCE({$prefix}usermeta_phone.meta_value, '')) AS phone")
             ->join('wc_order_stats', 'wc_order_stats.customer_id', 'wc_customer_lookup.customer_id')
+            ->leftJoin("usermeta", [
+                'usermeta.user_id' => 'wc_customer_lookup.user_id',
+                'usermeta.meta_key' => 'billing_company'
+            ])
+            ->leftJoinAs("usermeta", "usermeta_phone", [
+                'usermeta_phone.user_id' => 'wc_customer_lookup.user_id',
+                'usermeta_phone.meta_key' => 'billing_phone'
+            ])
             ->whereIn('wc_order_stats.status', WooMailerLiteOptions::COMPLETE_ORDER_STATUSES);
         if (self::builder()->customTableEnabled() && $sync) {
             $query->where('wc_order_stats.customer_id', '>', WooMailerLiteOptions::get('lastSyncedCustomer', 0));

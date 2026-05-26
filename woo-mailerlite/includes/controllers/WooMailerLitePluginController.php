@@ -32,9 +32,10 @@ class WooMailerLitePluginController extends WooMailerLiteController
             <?php
         } else {
             woocommerce_form_field('woo_ml_subscribe', array(
-                'type'  => 'checkbox',
-                'label' => __($this->label, 'woo-mailerlite'),
-                'checked' => $this->preselect ? 'checked' : ''
+                'type'        => 'checkbox',
+                'label'       => __($this->label, 'woo-mailerlite'),
+                'checked'     => $this->preselect ? 'checked' : '',
+                'label_class' => ['woocommerce-form__label-for-checkbox'],
             ), (bool) $this->preselect);
         }
     }
@@ -51,9 +52,10 @@ class WooMailerLitePluginController extends WooMailerLiteController
             if ($key === 'billing_email') {
 
                 $new_billing_fields['woo_ml_subscribe'] = [
-                    'type' => (!$this->hidden) ? 'checkbox' : 'hidden',
-                    'default' => $this->preselect,
-                    'required' => false,
+                    'type'        => (!$this->hidden) ? 'checkbox' : 'hidden',
+                    'default'     => $this->preselect,
+                    'required'    => false,
+                    'label_class' => ['woocommerce-form__label-for-checkbox'],
                 ];
 
                 if (!$this->hidden) {
