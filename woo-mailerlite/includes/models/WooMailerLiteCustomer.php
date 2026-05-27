@@ -127,8 +127,8 @@ class WooMailerLiteCustomer extends WooMailerLiteModel
                     max({$prefix}wc_order_stats.date_created) AS last_order,
                     count(DISTINCT ({$prefix}wc_order_stats.order_id)) AS orders_count,
                     sum(({$prefix}wc_order_stats.total_sales)) AS total_spent,
-                    ANY_VALUE(COALESCE({$prefix}usermeta.meta_value, '')) AS company,
-                    ANY_VALUE(COALESCE({$prefix}usermeta_phone.meta_value, '')) AS phone")
+                    MAX(COALESCE({$prefix}usermeta.meta_value, '')) AS company,
+                    MAX(COALESCE({$prefix}usermeta_phone.meta_value, '')) AS phone")
             ->join('wc_order_stats', 'wc_order_stats.customer_id', 'wc_customer_lookup.customer_id')
             ->leftJoin("usermeta", [
                 'usermeta.user_id' => 'wc_customer_lookup.user_id',
