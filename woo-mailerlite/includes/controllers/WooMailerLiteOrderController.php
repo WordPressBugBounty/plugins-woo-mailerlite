@@ -28,6 +28,16 @@ class WooMailerLiteOrderController extends WooMailerLiteController
                     ->whereIn("status", WooMailerLiteOptions::allSupportedOrderStatuses())
                     ->first();
             }
+            // Query live order stats directly to avoid stale wc_order_stats reads when
+            // multiple orders are placed in quick succession for the same email.
+            $liveOrders     = wc_get_orders([
+                'billing_email' => $order->get_billing_email(),
+                'status'        => WooMailerLiteOptions::COMPLETE_ORDER_STATUSES,
+                'limit'         => -1,
+            ]);
+            $liveOrdersCount = count($liveOrders);
+            $liveTotalSpent  = (float) array_sum(array_map(fn($o) => $o->get_total(), $liveOrders));
+
             $cart = WooMailerLiteCart::where('email', $order->get_billing_email())->first();
             if (!$cart) {
                 $cart = WooMailerLiteCart::where('hash', WooMailerLiteSession::getMLCartHash())
@@ -100,8 +110,8 @@ class WooMailerLiteOrderController extends WooMailerLiteController
                 'create_subscriber' => $subscribe,
                 'accepts_marketing' => $subscribe,
                 'subscriber_fields' => $customerFields,
-                'total_spent' => ($customer->total_spent ?? $order->get_total()),
-                'orders_count' => ($customer->orders_count ?? 1),
+                'total_spent' => $liveTotalSpent,
+                'orders_count' => $liveOrdersCount,
                 'last_order_id' => $customer->last_order_id ?? null,
                 'last_order' => $customer->last_order ?? null
             ];
@@ -125,8 +135,8 @@ class WooMailerLiteOrderController extends WooMailerLiteController
                 $orderData['order'] = $order->get_data();
                 $orderData['checkout_id'] = $cart->data['checkout_id'] ?? null;
                 $orderData['order_url'] = home_url() . "/wp-admin/post.php?post=" . $orderId . "&action=edit";
-                $customerFields['woo_total_spent'] = ($customer->total_spent ?? $order->get_total());
-                $customerFields['woo_orders_count'] = ($customer->orders_count ?? 1);
+                $customerFields['woo_total_spent'] =  $liveTotalSpent;
+                $customerFields['woo_orders_count'] =  $liveOrdersCount;
                 $customerFields['woo_last_order_id'] = $customer->last_order_id ?? null;
                 $customerFields['woo_last_order'] = $customer->last_order ?? nulL;
                 $data = [
