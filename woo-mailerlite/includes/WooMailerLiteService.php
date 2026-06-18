@@ -131,7 +131,7 @@ class WooMailerLiteService
         }
         $customer = WooMailerLiteSession::getMLCustomer();
         $checkoutData = WooMailerLiteCheckoutDataService::getCheckoutData($customer['customer']['email'] ?? null);
-        $customerQuery = WooMailerLiteCustomer::where('email', $customer['customer']['email'])->first();
+        $customerQuery = WooMailerLiteCustomer::where('email', $customer['customer']['email'] ?? null)->first();
         try {
             if (self::instance()->apiClient->isClassic()) {
                 home_url();

@@ -30,7 +30,12 @@ class WooMailerLiteSession {
 
     public static function getMLCustomer()
     {
-        return WC()->session->get('woo_mailerlite_customer_data');
+        $customer = WC()->session->get('woo_mailerlite_customer_data');
+        if (empty($customer) || !isset($customer['customer'])) {
+           return ['customer' => ['email' => null]];
+        }
+
+        return $customer;
     }
 
     public static function getMLCartHash()
