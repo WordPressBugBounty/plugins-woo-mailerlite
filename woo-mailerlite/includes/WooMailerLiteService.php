@@ -168,7 +168,7 @@ class WooMailerLiteService
                 $orderCustomer['subscriber_fields'] = array_filter(
                     $orderCustomer['subscriber_fields'],
                     function ($v, $k) {
-                        return in_array($k, WooMailerLiteOptions::get("settings.syncFields"));
+                        return in_array($k, WooMailerLiteOptions::get("settings.syncFields", []));
                     },
                     ARRAY_FILTER_USE_BOTH
                 );
@@ -194,6 +194,7 @@ class WooMailerLiteService
 
                     $orderCart['items'][] = [
                         'product_resource_id' => (string)$item['product_id'],
+                        'ecommerce_product_variant_id' => (string) $item['variation_id'],
                         'variant'             => $product->get_name(),
                         'quantity'            => (int)$item['quantity'],
                         'price'               => floatval($product->get_price('edit')),

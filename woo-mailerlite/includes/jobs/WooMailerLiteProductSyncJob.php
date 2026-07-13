@@ -2,6 +2,8 @@
 
 class WooMailerLiteProductSyncJob extends WooMailerLiteAbstractJob
 {
+    use WooMailerLiteProductVariantsTrait;
+
     public function handle($data = [])
     {
         $products = WooMailerLiteProduct::untracked()->get(100);
@@ -50,6 +52,7 @@ class WooMailerLiteProductSyncJob extends WooMailerLiteAbstractJob
                 'image' => $product->image ?? null,
                 'description' => $product->description ?? null,
                 'short_description' => $product->short_description ?? null,
+                'variants' => $this->getProductVariants($product->resource_id),
             ]);
 
             $product->tracked = true;
@@ -65,4 +68,5 @@ class WooMailerLiteProductSyncJob extends WooMailerLiteAbstractJob
             WooMailerLiteCustomerSyncJob::dispatch($data);
         }
     }
+
 }

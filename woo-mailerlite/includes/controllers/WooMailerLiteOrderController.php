@@ -121,6 +121,7 @@ class WooMailerLiteOrderController extends WooMailerLiteController
                 if ($item->get_product_id() !== 0) {
                     $items[] = [
                         'product_resource_id' => (string)$item->get_product_id(),
+                        'ecommerce_product_variant_id' => (string) $item->get_variation_id(),
                         'variant'             => $item->get_name(),
                         'quantity'            => $item->get_quantity(),
                         'price'               => (float)$item->get_product()->get_price()

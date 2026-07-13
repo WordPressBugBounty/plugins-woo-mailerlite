@@ -2,6 +2,8 @@
 
 class WooMailerLiteProduct extends WooMailerLiteModel
 {
+    use WooMailerLiteProductVariantsTrait;
+
     protected $casts = [
         'resource_id',
         'name',
@@ -81,18 +83,26 @@ class WooMailerLiteProduct extends WooMailerLiteModel
         return self::untracked()->count();
     }
 
+    public function toArrayWithVariants()
+    {
+        return array_merge(
+            $this->toArray(),
+            ['variants' => $this->getProductVariants($this->resource_id)]
+        );
+    }
+
     public function isDeleted()
     {
         if (isset($this->attributes['status']) && $this->attributes['status'] === 'trash') {
             return true;
         }
-        
+
         // If we have a resource_id, check if the post still exists
         if (isset($this->attributes['resource_id'])) {
             $post = get_post($this->attributes['resource_id']);
             return !$post || $post->post_status === 'trash';
         }
-        
+
         return false;
     }
 }
