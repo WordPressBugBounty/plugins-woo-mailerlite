@@ -99,6 +99,7 @@ class WooMailerLiteAdmin
 
     public function wooMailerLiteSettingsPageCallback()
     {
+        $this->migrateProductVariantsOrIgnore();
        $falseApi = false;
 //        if (!WooMailerLiteCache::get('valid_api')) {
 //            $response = WooMailerLiteApi::client()->ping();
@@ -139,6 +140,22 @@ class WooMailerLiteAdmin
         ]);
 
         require_once __DIR__ . '/../views/mailerlite-app.php';
+    }
+
+    private function migrateProductVariantsOrIgnore()
+    {
+        if (WooMailerLiteOptions::get('productVariantsMigrated', false)) {
+            return;
+        }
+
+        if (!WooMailerLiteOptions::get('apiKey') || !WooMailerLiteOptions::get('shopId')) {
+            return;
+        }
+
+        WooMailerLiteOptions::update('productVariantsMigrated', true);
+        WooMailerLiteProductVariantsMigrationJob::dispatch();
+
+        WooMailerLiteLog()->info('variants:migration:started');
     }
 
     public function addModuleTypeScript($tag, $handle, $src)
