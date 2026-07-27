@@ -1353,3 +1353,81 @@ input:checked + .ml-slider:before {
     left: 100%;
   }
 }
+
+.woo-ml-survey-card {
+  float: right;
+  margin-left: 2rem;
+  background: linear-gradient(to bottom, rgba(9, 194, 105, 0.12) 0%, #ffffff 100%);
+  border: 1px solid #e5e7eb;
+  border-radius: 0.5rem;
+  padding: 1.5rem 2rem;
+  width: 300px;
+  margin-top: 2rem;
+}
+
+.woo-ml-survey-title {
+  font-size: 0.9375rem;
+  font-weight: 500;
+  color: #000;
+  margin: 0 0 1.25rem;
+  line-height: 1.4;
+  text-align: left;
+  white-space: nowrap;
+}
+
+.woo-ml-survey-emojis {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.25rem;
+  margin-bottom: 0.5rem;
+}
+
+.woo-ml-survey-emoji {
+  font-size: 1.75rem;
+  line-height: 1;
+  cursor: pointer;
+  transition: transform 0.15s ease;
+  display: inline-block;
+  background: none;
+  border: none;
+  padding: 0;
+  height: auto;
+}
+
+.woo-ml-survey-emoji:hover {
+  transform: scale(1.25);
+  background: none;
+}
+
+.woo-ml-survey-thanks-text {
+  font-size: 0.875rem;
+  color: rgba(0, 0, 0, 0.6);
+  margin: 0;
+  text-align: center;
+}
+
+.woo-ml-survey-thanks-text a {
+  color: rgba(0, 0, 0, 0.6);
+  text-decoration: underline;
+}
+
+.woo-ml-survey-thanks-text a:hover {
+  text-decoration: none;
+}
+
+.woo-ml-survey-labels {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.75rem;
+  color: rgba(0, 0, 0, 0.5);
+  margin-top: 0.25rem;
+}
+
+@media only screen and (max-width: 960px) {
+  .woo-ml-survey-card {
+    float: none;
+    margin-left: 0;
+    width: 100%;
+    box-sizing: border-box;
+  }
+}

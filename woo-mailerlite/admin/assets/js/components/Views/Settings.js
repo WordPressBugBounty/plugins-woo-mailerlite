@@ -2,7 +2,9 @@ import CustomSelect from '../Forms/CustomSelect.js';
 import SyncFields from '../Forms/SyncFields.js';
 import eventBus from '../eventBus.js';
 import ApiMixin from '../Api/ApiMixin.js';
-import {loadStart, loadEnd} from "../Plugins/Loader.js";
+import { loadStart, loadEnd } from "../Plugins/Loader.js";
+
+const POSTHOG_SURVEY_URL = 'https://eu.posthog.com/external_surveys/019f4c72-484a-0000-6cf7-722469ae076c';
 
 const template = `
 <div v-if="syncInProgress || asyncSyncInProgress" class="woo-ml-sync-loading-container" data-testid="sync-in-progress">
@@ -13,6 +15,26 @@ const template = `
 </div>
 <form method="post" id="updateSettingsForm">
         <div class="settings-block">
+            <div class="woo-ml-survey-card" v-if="shouldShowSurvey">
+                <p class="woo-ml-survey-title">How are you finding this integration so far?</p>
+                <div class="woo-ml-survey-emojis">
+                    <button type="button" @click="openSurvey" class="woo-ml-survey-emoji" title="Very unsatisfied">😫</button>
+                    <button type="button" @click="openSurvey" class="woo-ml-survey-emoji" title="Unsatisfied">😠</button>
+                    <button type="button" @click="openSurvey" class="woo-ml-survey-emoji" title="Somewhat unsatisfied">😕</button>
+                    <button type="button" @click="openSurvey" class="woo-ml-survey-emoji" title="Neutral">😐</button>
+                    <button type="button" @click="openSurvey" class="woo-ml-survey-emoji" title="Somewhat satisfied">🙂</button>
+                    <button type="button" @click="openSurvey" class="woo-ml-survey-emoji" title="Satisfied">😊</button>
+                    <button type="button" @click="openSurvey" class="woo-ml-survey-emoji" title="Very satisfied">🤩</button>
+                </div>
+                <div class="woo-ml-survey-labels">
+                    <span>Very unsatisfied</span>
+                    <span>Very satisfied</span>
+                </div>
+            </div>
+            <div class="woo-ml-survey-card" v-if="shouldShowSurveyThanks">
+                <p class="woo-ml-survey-title">Thanks for sharing!</p>
+                <p class="woo-ml-survey-thanks-text"><a href="${POSTHOG_SURVEY_URL}" target="_blank" rel="noopener noreferrer">Relaunch survey</a></p>
+            </div>
             <div class="settings-block-fixed">
 
                 <h2 class="settings-block-header">Synchronization settings</h2>
@@ -144,9 +166,9 @@ const template = `
                               :disabled="!settings.subscribeOnCheckout"
                               v-model="settings.selectedCheckoutPosition"
                             >
-                              <option 
-                                v-for="(checkoutPosition, key) in checkoutPositions" 
-                                :key="key" 
+                              <option
+                                v-for="(checkoutPosition, key) in checkoutPositions"
+                                :key="key"
                                 :value="key"
                               >
                                 {{ checkoutPosition }}
@@ -302,7 +324,7 @@ const Settings = {
     template,
     mixins: [ApiMixin],
     props: {
-      group: {
+        group: {
             type: Object,
             required: false
         },
@@ -312,92 +334,94 @@ const Settings = {
         },
     },
     data() {
-      return {
-          ignoredProducts: woo_mailerlite_admin_data.ignoredProducts,
-          productsUrl: woo_mailerlite_admin_data.productsUrl,
-          groups: [
-              {
-                  value: 1,
-                  text: 'Group 1'
-              },
-              {
-                  value: 2,
-                  text: 'Group 2'
-              },
-              {
-                  value: 3,
-                  text: 'Group 3'
-              },
-          ],
-          selectedGroup: woo_mailerlite_admin_data.selectedGroup ?? null,
-          syncFields: [
-              {
-                  value: 'name',
-                  text: 'Name',
-                  default: true
-              },
-              {
-                  value: 'email',
-                  text: 'Email',
-                  default: true
-              },
-              {
-                  value: 'company',
-                  text: 'Company'
-              },
-              {
-                  value: 'city',
-                  text: 'City'
-              },
-              {
-                  value: 'zip',
-                  text: 'ZIP'
-              },
-              {
-                  value: 'state',
-                  text: 'State'
-              },
-              {
-                  value: 'country',
-                  text: 'Country'
-              },
-              {
-                  value: 'phone',
-                  text: 'Phone'
-              },
-          ],
-          accountConnected: true,
-          totalTrackedResources: 0,
-          totalUntrackedResources: woo_mailerlite_admin_data.sync.totalUntrackedResources ?? 0,
-          syncInProgress: woo_mailerlite_admin_data.sync.syncInProgress,
-          lastCustomerSync: 1,
-          newMLSync: 0,
-          settings: {
-              languageField: false,
-              subscribeOnCheckout: false,
-              resubscribe: false,
-              selectedCheckoutPosition: woo_mailerlite_admin_data.selectedCheckoutPosition ?? 'checkout_billing',
-              checkoutPreselect: false,
-              checkoutHidden: false,
-              syncAfterCheckout: false,
-              checkoutLabel: 'Yes, I want to receive your newsletter.',
-              doubleOptIn: false,
-              popUps: false,
-              autoUpdatePlugin: false,
-          },
-          debugMode: woo_mailerlite_admin_data?.debugMode ?? false,
-          platform: woo_mailerlite_admin_data?.account?.platform === 'rewrite' ? 1 : 2,
-          checkoutPositions: {
-              'checkout_billing'                :'After billing details',
-              'checkout_billing_email'          : 'After billing email address',
-              'checkout_shipping'               :'After shipping details',
-              'checkout_after_customer_details' :'After customer details',
-              'review_order_before_submit'      : 'Before submit button',
-          },
-          isLoading: false,
-          selectedSyncFields: [],
-          asyncSyncInProgress: woo_mailerlite_admin_data.asyncSync,
-      }
+        return {
+            ignoredProducts: woo_mailerlite_admin_data.ignoredProducts,
+            productsUrl: woo_mailerlite_admin_data.productsUrl,
+            groups: [
+                {
+                    value: 1,
+                    text: 'Group 1'
+                },
+                {
+                    value: 2,
+                    text: 'Group 2'
+                },
+                {
+                    value: 3,
+                    text: 'Group 3'
+                },
+            ],
+            selectedGroup: woo_mailerlite_admin_data.selectedGroup ?? null,
+            syncFields: [
+                {
+                    value: 'name',
+                    text: 'Name',
+                    default: true
+                },
+                {
+                    value: 'email',
+                    text: 'Email',
+                    default: true
+                },
+                {
+                    value: 'company',
+                    text: 'Company'
+                },
+                {
+                    value: 'city',
+                    text: 'City'
+                },
+                {
+                    value: 'zip',
+                    text: 'ZIP'
+                },
+                {
+                    value: 'state',
+                    text: 'State'
+                },
+                {
+                    value: 'country',
+                    text: 'Country'
+                },
+                {
+                    value: 'phone',
+                    text: 'Phone'
+                },
+            ],
+            accountConnected: true,
+            totalTrackedResources: 0,
+            totalUntrackedResources: woo_mailerlite_admin_data.sync.totalUntrackedResources ?? 0,
+            syncInProgress: woo_mailerlite_admin_data.sync.syncInProgress,
+            lastCustomerSync: 1,
+            newMLSync: 0,
+            settings: {
+                languageField: false,
+                subscribeOnCheckout: false,
+                resubscribe: false,
+                selectedCheckoutPosition: woo_mailerlite_admin_data.selectedCheckoutPosition ?? 'checkout_billing',
+                checkoutPreselect: false,
+                checkoutHidden: false,
+                syncAfterCheckout: false,
+                checkoutLabel: 'Yes, I want to receive your newsletter.',
+                doubleOptIn: false,
+                popUps: false,
+                autoUpdatePlugin: false,
+            },
+            debugMode: woo_mailerlite_admin_data?.debugMode ?? false,
+            platform: woo_mailerlite_admin_data?.account?.platform === 'rewrite' ? 1 : 2,
+            checkoutPositions: {
+                'checkout_billing': 'After billing details',
+                'checkout_billing_email': 'After billing email address',
+                'checkout_shipping': 'After shipping details',
+                'checkout_after_customer_details': 'After customer details',
+                'review_order_before_submit': 'Before submit button',
+            },
+            isLoading: false,
+            selectedSyncFields: [],
+            asyncSyncInProgress: woo_mailerlite_admin_data.asyncSync,
+            surveyClicked: false,
+            surveyFirstSeen: null,
+        }
     },
     mounted() {
         eventBus.on('sync-completed', (sync) => {
@@ -409,7 +433,7 @@ const Settings = {
         });
 
         eventBus.on('reset-integration', (untracked) => {
-                this.resetPlugin()
+            this.resetPlugin()
         });
 
     },
@@ -432,8 +456,38 @@ const Settings = {
         if (this.group) {
             this.selectedGroup = this.group;
         }
+        this.surveyClicked = localStorage.getItem('woo_ml_survey_clicked') === '1';
+
+        if (localStorage.getItem('woo_ml_survey_first_seen') === null) {
+            localStorage.setItem('woo_ml_survey_first_seen', new Date().toISOString());
+        }
+        this.surveyFirstSeen = localStorage.getItem('woo_ml_survey_first_seen');
     },
     computed: {
+        surveyActive() {
+            if (this.surveyFirstSeen === null) {
+                return false;
+            }
+
+            const expiry = new Date(this.surveyFirstSeen);
+            expiry.setDate(expiry.getDate() + 10);
+
+            return new Date() < expiry;
+        },
+        shouldShowSurvey() {
+            if (this.surveyClicked) {
+                return false;
+            }
+
+            return this.surveyActive;
+        },
+        shouldShowSurveyThanks() {
+            if (this.surveyClicked) {
+                return this.surveyActive;
+            }
+
+            return false;
+        },
         syncMessage() {
             const count = this.totalUntrackedResources;
             return count === 1
@@ -475,7 +529,7 @@ const Settings = {
             loadStart(this.$refs.resetSyncBtn)
             const resetData = await this.resetResources()
             loadEnd(this.$refs.resetSyncBtn)
-            eventBus.emit('reset-completed', resetData.data?.totalUntrackedResources ?? 0 );
+            eventBus.emit('reset-completed', resetData.data?.totalUntrackedResources ?? 0);
         },
         syncResources() {
             this.syncResources()
@@ -512,7 +566,12 @@ const Settings = {
             const response = await this.debugModeEnable()
             this.debugMode = response
             loadEnd(this.$refs.enableDebugMode)
-        }
+        },
+        openSurvey() {
+            this.surveyClicked = true;
+            localStorage.setItem('woo_ml_survey_clicked', '1');
+            window.open(POSTHOG_SURVEY_URL, '_blank', 'noopener,noreferrer');
+        },
     }
 };
 

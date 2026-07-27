@@ -194,11 +194,11 @@ class WooMailerLiteAdminWizardController extends WooMailerLiteController
     }
     public function getDebugLogs()
     {
-        $this->authorize();   
+        $this->authorize();
         if (!function_exists('shell_exec')) {
             return $this->response(['log' => 'Please enable shell_exec function in your php config.'], 200);
         }
-        
+
         $errorPath = escapeshellarg(ini_get('error_log'));
         $log = '';
         if(!empty($errorPath)) {
@@ -230,11 +230,11 @@ class WooMailerLiteAdminWizardController extends WooMailerLiteController
             '/Bearer\s+[a-zA-Z0-9_-]+/i' => 'Bearer [REDACTED]',
             '/Authorization:\s*[^\n]+/i' => 'Authorization: [REDACTED]',
         ];
-        
+
         foreach ($patterns as $pattern => $replacement) {
             $log = preg_replace($pattern, $replacement, $log);
         }
-        
+
         return $log;
     }
 }
