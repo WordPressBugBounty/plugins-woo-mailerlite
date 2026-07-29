@@ -23,7 +23,7 @@ class WooMailerLiteAdmin
     public function enqueueScripts($hook)
     {
         if ($hook === 'edit.php' && isset($_GET['post_type']) && $_GET['post_type'] === 'product') {
-            wp_enqueue_script('woo-mailerlite-quick-edit', plugin_dir_url(__FILE__) . '../admin/assets/js/ml-quick-edit.js', ['jquery', 'inline-edit-post'], null, true);
+            wp_enqueue_script('woo-mailerlite-quick-edit', plugin_dir_url(__FILE__) . '../admin/assets/js/ml-quick-edit.js', ['jquery', 'inline-edit-post'], WOO_MAILERLITE_VERSION, true);
             return;
         }
 
@@ -41,7 +41,7 @@ class WooMailerLiteAdmin
         ));
 
         wp_enqueue_script('woo-mailerlite-select2', plugin_dir_url(__FILE__) . 'assets/js/lib/select2.min.js', ['jquery'], WOO_MAILERLITE_VERSION, true);
-        wp_enqueue_script('woo-mailerlite-admin', plugin_dir_url(__FILE__) . '../admin/assets/js/ml-app.js', ['jquery', 'woo-mailerlite-vue-cdn', 'woo-mailerlite-select2'], null, true);
+        wp_enqueue_script('woo-mailerlite-admin', plugin_dir_url(__FILE__) . '../admin/assets/js/ml-app.js', ['jquery', 'woo-mailerlite-vue-cdn', 'woo-mailerlite-select2'], WOO_MAILERLITE_VERSION, true);
 
     }
 
