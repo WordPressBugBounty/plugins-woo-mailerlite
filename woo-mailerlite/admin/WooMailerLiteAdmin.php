@@ -99,7 +99,6 @@ class WooMailerLiteAdmin
 
     public function wooMailerLiteSettingsPageCallback()
     {
-        $this->migrateProductVariantsOrIgnore();
        $falseApi = false;
 //        if (!WooMailerLiteCache::get('valid_api')) {
 //            $response = WooMailerLiteApi::client()->ping();
@@ -142,7 +141,7 @@ class WooMailerLiteAdmin
         require_once __DIR__ . '/../views/mailerlite-app.php';
     }
 
-    private function migrateProductVariantsOrIgnore()
+    public function migrateProductVariantsOrIgnore()
     {
         if (WooMailerLiteOptions::get('productVariantsMigrated', false)) {
             return;

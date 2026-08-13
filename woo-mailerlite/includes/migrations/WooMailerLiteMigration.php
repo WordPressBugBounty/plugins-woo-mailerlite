@@ -14,7 +14,8 @@ class WooMailerLiteMigration
                     data LONGTEXT NOT NULL,
                     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
                     updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-                    PRIMARY KEY (id))
+                    PRIMARY KEY (id),
+                    KEY created_at (created_at))
                     DEFAULT CHARACTER
                     SET utf8mb4 COLLATE utf8mb4_unicode_520_ci;";
         db()->query($cartsTableSql);
@@ -29,6 +30,23 @@ class WooMailerLiteMigration
                         DEFAULT CHARACTER
                         SET utf8mb4 COLLATE utf8mb4_unicode_520_ci;";
         db()->query($jobsTableMigration);
+    }
+
+    public static function addCartsCreatedAtIndex()
+    {
+        if (WooMailerLiteOptions::get('cartsCreatedAtIndexAdded')) {
+            return;
+        }
+
+        $prefix = db()->prefix;
+        $table = "{$prefix}woo_mailerlite_carts";
+        $indexExists = db()->get_var("SHOW INDEX FROM {$table} WHERE Key_name = 'created_at'");
+
+        if (!$indexExists) {
+            db()->query("ALTER TABLE {$table} ADD INDEX created_at (created_at)");
+        }
+
+        WooMailerLiteOptions::update('cartsCreatedAtIndexAdded', true);
     }
 
     public static function rollback()

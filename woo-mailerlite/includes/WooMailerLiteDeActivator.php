@@ -18,6 +18,10 @@ class WooMailerLiteDeActivator {
      */
     public static function deactivate()
     {
+        if (function_exists('as_unschedule_all_actions')) {
+            as_unschedule_all_actions(WooMailerLiteCartCleanupJob::class);
+        }
+        WooMailerLiteCache::delete('cart_cleanup_scheduled');
         WooMailerLiteMigration::rollback();
         WooMailerLiteOptions::deleteAll();
         WooMailerLiteMigration::truncate();

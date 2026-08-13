@@ -139,6 +139,9 @@ class WooMailerLite {
             WooMailerLiteMigration::migrate();
             WooMailerLiteCache::set('table_check', true, 86400);
         }
+        WooMailerLiteMigration::addCartsCreatedAtIndex();
+        $this->loader->add_action('init', $this, 'scheduleCartCleanupJob');
+        $this->loader->add_action('init', WooMailerLiteAdmin::instance(), 'migrateProductVariantsOrIgnore');
         $jobsDirectory = __DIR__ . '/./jobs';
         $iterator = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($jobsDirectory));
         foreach ($iterator as $job) {
@@ -152,6 +155,21 @@ class WooMailerLite {
                 }
             }
         }
+    }
+
+    public function scheduleCartCleanupJob()
+    {
+        if (WooMailerLiteCache::get('cart_cleanup_scheduled')) {
+            return;
+        }
+        if (!function_exists('as_next_scheduled_action') || !function_exists('as_schedule_recurring_action')) {
+            return;
+        }
+
+        if (!as_next_scheduled_action(WooMailerLiteCartCleanupJob::class)) {
+            as_schedule_recurring_action(time(), DAY_IN_SECONDS, WooMailerLiteCartCleanupJob::class);
+        }
+        WooMailerLiteCache::set('cart_cleanup_scheduled', true, 86400);
     }
 
     /**

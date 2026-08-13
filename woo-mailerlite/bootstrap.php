@@ -45,6 +45,7 @@ spl_autoload_register(function($class) {
         'WooMailerLiteCategorySyncResetJob' => 'includes/jobs/WooMailerLiteCategorySyncResetJob.php',
         'WooMailerLiteCustomerSyncResetJob' => 'includes/jobs/WooMailerLiteCustomerSyncResetJob.php',
         'WooMailerLiteProductVariantsMigrationJob' => 'includes/jobs/WooMailerLiteProductVariantsMigrationJob.php',
+        'WooMailerLiteCartCleanupJob' => 'includes/jobs/WooMailerLiteCartCleanupJob.php',
 
         //includes/models
         'WooMailerLiteModel' => 'includes/models/WooMailerLiteModel.php',
