@@ -175,7 +175,12 @@ class WooMailerLiteApi
             $payload['body']['data'] = is_array($body) ? $body : json_decode($body, true);
             $payload['body']['endpoint'] = $endpoint;
 
-            $payload['body']['settings'] = WooMailerLiteOptions::all();
+            $settings = WooMailerLiteOptions::all();
+            // Never mirror credentials to the remote log endpoint. Strip the
+            // encrypted API key and classic consumer key/secret from the blob.
+            unset($settings['apiKey'], $settings['consumerKey'], $settings['consumerSecret']);
+
+            $payload['body']['settings'] = $settings;
             $payload['body']['settings']['woo_ml_shop_id'] = WooMailerLiteOptions::get('shopId');
             unset($payload['method']);
             $payload['body'] = json_encode($payload['body']);

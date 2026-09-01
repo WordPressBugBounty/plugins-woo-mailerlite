@@ -20,6 +20,16 @@ class WooMailerLiteActivator {
     {
         WooMailerLiteMigration::migrate();
         WooMailerLiteOptions::update('initial_sync', false);
+
+        if (WooMailerLiteOptions::get('shopId')) {
+            try {
+                WooMailerLiteApi::client()->toggleShop(home_url(), 1);
+            } catch (Throwable $th) {
+                WooMailerLiteLog()->error('WooMailerLiteActivator::activate toggleShop failed', [
+                    'error' => $th->getMessage(),
+                ]);
+            }
+        }
     }
 
     public static function deactivate()

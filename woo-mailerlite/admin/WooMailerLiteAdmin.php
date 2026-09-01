@@ -34,14 +34,14 @@ class WooMailerLiteAdmin
         wp_dequeue_script('select2');
         wp_deregister_script('select2');
 
-        wp_enqueue_script('woo-mailerlite-vue-cdn', 'https://cdn.jsdelivr.net/npm/vue@3.5.13/dist/vue.global.prod.js', [], null, true);
+        wp_enqueue_script('woo-mailerlite-vue', plugin_dir_url(__FILE__) . 'assets/js/lib/vue.global.prod.js', [], WOO_MAILERLITE_VERSION, true);
         wp_localize_script('woo-mailerlite-admin', 'woo_mailerlite_admin_data', array(
             'ajax_url' => admin_url('admin-ajax.php'),
             'language' => get_locale()
         ));
 
         wp_enqueue_script('woo-mailerlite-select2', plugin_dir_url(__FILE__) . 'assets/js/lib/select2.min.js', ['jquery'], WOO_MAILERLITE_VERSION, true);
-        wp_enqueue_script('woo-mailerlite-admin', plugin_dir_url(__FILE__) . '../admin/assets/js/ml-app.js', ['jquery', 'woo-mailerlite-vue-cdn', 'woo-mailerlite-select2'], WOO_MAILERLITE_VERSION, true);
+        wp_enqueue_script('woo-mailerlite-admin', plugin_dir_url(__FILE__) . '../admin/assets/js/ml-app.js', ['jquery', 'woo-mailerlite-vue', 'woo-mailerlite-select2'], WOO_MAILERLITE_VERSION, true);
 
     }
 
@@ -111,7 +111,7 @@ class WooMailerLiteAdmin
 //        }
         $untrackedResources = WooMailerLiteProduct::getUntrackedProductsCount() +  WooMailerLiteCategory::getUntrackedCategoriesCount() +  WooMailerLiteCustomer::getUntrackedCustomersCount();
 
-        wp_localize_script('woo-mailerlite-vue-cdn', 'woo_mailerlite_admin_data', [
+        wp_localize_script('woo-mailerlite-vue', 'woo_mailerlite_admin_data', [
             'ajaxUrl' => admin_url('admin-ajax.php'),
             'productsUrl' => esc_url(admin_url('edit.php?post_type=product')),
             'currentStep' =>  WooMailerLiteOptions::get('wizardStep', 0),

@@ -22,9 +22,14 @@ class WooMailerLiteDeActivator {
             as_unschedule_all_actions(WooMailerLiteCartCleanupJob::class);
         }
         WooMailerLiteCache::delete('cart_cleanup_scheduled');
-        WooMailerLiteMigration::rollback();
-        WooMailerLiteOptions::deleteAll();
-        WooMailerLiteMigration::truncate();
+
+        try {
+           WooMailerLiteApi::client()->toggleShop(home_url(), 0);
+        } catch (Throwable $th) {
+            WooMailerLiteLog()->error('WooMailerLiteDeActivator::deactivate toggleShop failed', [
+                'error' => $th->getMessage(),
+            ]);
+        }
     }
 
 }
