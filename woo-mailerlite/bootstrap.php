@@ -29,6 +29,7 @@ spl_autoload_register(function($class) {
 
 
         'WooMailerLiteCheckoutDataService' => 'includes/services/WooMailerLiteCheckoutDataService.php',
+        'WooMailerLiteLanguageService' => 'includes/services/WooMailerLiteLanguageService.php',
 
         // includes/api
         'WooMailerLiteApi' => 'includes/api/WooMailerLiteApi.php',

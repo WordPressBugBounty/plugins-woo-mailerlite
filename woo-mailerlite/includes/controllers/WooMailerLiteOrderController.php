@@ -15,7 +15,7 @@ class WooMailerLiteOrderController extends WooMailerLiteController
                 return true;
             }
 
-            $this->persistLanguageToOrder($order);
+            WooMailerLiteLanguageService::persistToOrder($order);
 
             if (WooMailerLiteSession::getMLCartHash()) {
                 $order->add_meta_data('_woo_ml_cart_hash', WooMailerLiteSession::getMLCartHash());
@@ -82,9 +82,16 @@ class WooMailerLiteOrderController extends WooMailerLiteController
             }
 
             $customerFields = array_intersect_key($filteredCustomerData, array_flip($syncFields));
-            if (WooMailerLiteOptions::get('settings.languageField')) {
-                $customerFields['subscriber_language'] = $order->get_meta('_woo_ml_language');
+
+            if (in_array('phone', $syncFields) && empty($customerFields['phone']) && $order->get_billing_phone()) {
+                $customerFields['phone'] = $order->get_billing_phone();
             }
+
+            if (in_array('company', $syncFields) && empty($customerFields['company']) && $order->get_billing_company()) {
+                $customerFields['company'] = $order->get_billing_company();
+            }
+
+            $customerFields = WooMailerLiteLanguageService::applyTo($customerFields, $order);
 
             $subscribe = false;
             $email = $customer->email ?? $order->get_billing_email();
@@ -243,15 +250,12 @@ class WooMailerLiteOrderController extends WooMailerLiteController
         }
     }
 
-    private function persistLanguageToOrder($order): void
+    /**
+     * Snapshots the language while the order is being created, so gateway
+     * callbacks and later status changes do not need the shopper's session.
+     */
+    public function persistLanguageForOrder($order): void
     {
-        $key = '_woo_ml_language';
-        if (isset(WC()->session)) {
-            $language = WC()->session->get($key);
-            if ($language && !$order->get_meta($key)) {
-                $order->add_meta_data($key, $language);
-                $order->save();
-            }
-        }
+        WooMailerLiteLanguageService::persistToOrder($order);
     }
 }

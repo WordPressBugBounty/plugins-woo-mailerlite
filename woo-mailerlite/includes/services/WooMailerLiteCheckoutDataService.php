@@ -78,11 +78,6 @@ class WooMailerLiteCheckoutDataService
                 $checkoutData['subscribe'] = true;
             }
 
-            if (isset($_POST['language'])) {
-                WC()->session->set('_woo_ml_language', textInput('language'));
-                $checkoutData['language'] = textInput('language');
-            }
-
             if (!empty($subscriberFields)) {
                 $checkoutData['subscriber_fields'] = $subscriberFields;
             }

@@ -30,6 +30,7 @@ class WooMailerLiteService
      */
     public function handleCartUpdated()
     {
+        WooMailerLiteLanguageService::capture();
         WooMailerLiteSession::set('woo_mailerlite_cart_hash', WC()->session->get_customer_id());
         $cart = WooMailerLiteCart::where('hash', WooMailerLiteSession::getMLCartHash())->first();
         $data = WooMailerLiteSession::cart();
@@ -76,6 +77,7 @@ class WooMailerLiteService
      */
     public function handleCheckoutPage()
     {
+        WooMailerLiteLanguageService::capture();
         if (is_user_logged_in()) {
             $this->sendCart();
         }
@@ -101,6 +103,8 @@ class WooMailerLiteService
         if (!WooMailerLiteSession::getMLCartHash()) {
             $this->handleCartUpdated();
         }
+
+        WooMailerLiteLanguageService::capture();
 
         WooMailerLiteSession::set('woo_mailerlite_customer_data', ['customer' => $_POST, 'cart' => WC()->session->get( 'woo_mailerlite_cart_hash')]);
         // find the cart by cart id
@@ -173,10 +177,7 @@ class WooMailerLiteService
                     ARRAY_FILTER_USE_BOTH
                 );
 
-                if (isset($checkoutData['language'])) {
-                    $orderCustomer['subscriber_fields']['subscriber_language'] = $checkoutData['language'];
-                    $orderCustomer['subscriber_fields']['language'] = $checkoutData['language'];
-                }
+                $orderCustomer['subscriber_fields'] = WooMailerLiteLanguageService::applyTo($orderCustomer['subscriber_fields']);
 
                 $orderCart = [
                     'resource_id'  => (string)$checkoutData['id'],
