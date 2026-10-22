@@ -207,6 +207,7 @@ class WooMailerLite {
         $this->loader->add_action('woocommerce_order_status_changed', WooMailerLiteOrderController::instance(), 'handleOrderStatusChanged');
         $this->loader->add_action('woocommerce_saved_order_items', WooMailerLiteOrderController::instance(), 'handleOrderStatusChanged');
         $this->loader->add_action('woocommerce_order_status_completed', WooMailerLiteOrderController::instance(), 'handleOrderStatusChanged');
+        $this->loader->add_action('woocommerce_order_refunded', WooMailerLiteOrderController::instance(), 'handleOrderStatusChanged');
         $this->loader->add_action('wp_ajax_woo_mailerlite_set_cart_email', $service, 'setCartEmail');
         $this->loader->add_action('wp_ajax_nopriv_woo_mailerlite_set_cart_email', $service, 'setCartEmail');
     }

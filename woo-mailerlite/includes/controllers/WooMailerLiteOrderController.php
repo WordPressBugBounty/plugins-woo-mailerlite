@@ -36,7 +36,7 @@ class WooMailerLiteOrderController extends WooMailerLiteController
                 'limit'         => -1,
             ]);
             $liveOrdersCount = count($liveOrders);
-            $liveTotalSpent  = (float) array_sum(array_map(fn($o) => $o->get_total(), $liveOrders));
+            $liveTotalSpent  = (float) array_sum(array_map(fn($o) => (float) $o->get_remaining_refund_amount(), $liveOrders));
 
             $cart = WooMailerLiteCart::where('email', $order->get_billing_email())->first();
             if (!$cart) {
@@ -50,7 +50,7 @@ class WooMailerLiteOrderController extends WooMailerLiteController
                     ]);
                 }
             }
-            if (!$cart && !$customer) {
+            if (!$cart && !$customer && !$order->get_total_refunded()) {
                 return true;
             }
 
@@ -186,7 +186,7 @@ class WooMailerLiteOrderController extends WooMailerLiteController
                     $orderCustomer,
                     $cartData,
                     $order->get_status(),
-                    $order->get_total(),
+                    (float) $order->get_remaining_refund_amount(),
                     $date,
                     $stage
                 );
