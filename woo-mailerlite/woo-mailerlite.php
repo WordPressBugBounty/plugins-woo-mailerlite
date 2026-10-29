@@ -15,7 +15,7 @@
  * Plugin Name:       MailerLite - WooCommerce integration
  * Plugin URI:        https://mailerlite.com
  * Description:       Official MailerLite integration for WooCommerce. Track sales and campaign ROI, import products details, automate emails based on purchases and seamlessly add your customers to your email marketing lists via WooCommerce's checkout process.
- * Version:           3.1.28
+ * Version:           3.1.29
  * Author:            MailerLite
  * Author URI:        https://mailerlite.com
  * License:           GPL-2.0+
@@ -39,7 +39,7 @@ if (!isset($woo_mailerlite_autoload) || $woo_mailerlite_autoload === false) {
  * Start at version 1.0.0 and use SemVer - https://semver.org
  * Update when you release new versions.
  */
-define( 'WOO_MAILERLITE_VERSION', '3.1.28' );
+define( 'WOO_MAILERLITE_VERSION', '3.1.29' );
 
 define('WOO_MAILERLITE_ASYNC_JOBS', false);
 
@@ -78,6 +78,25 @@ add_action('woocommerce_blocks_loaded', function () {
                     }
                 }
             );
+
+            if (function_exists('woocommerce_store_api_register_endpoint_data') &&
+                class_exists('\Automattic\WooCommerce\StoreApi\Schemas\V1\CheckoutSchema')) {
+                woocommerce_store_api_register_endpoint_data([
+                    'endpoint'        => \Automattic\WooCommerce\StoreApi\Schemas\V1\CheckoutSchema::IDENTIFIER,
+                    'namespace'       => 'woo-mailerlite',
+                    'schema_callback' => function () {
+                        return [
+                            'subscribe' => [
+                                'description' => 'Whether the customer consented to marketing emails at checkout.',
+                                'type'        => ['boolean', 'null'],
+                                'context'     => ['view', 'edit'],
+                                'optional'    => true,
+                            ],
+                        ];
+                    },
+                    'schema_type'     => ARRAY_A,
+                ]);
+            }
 
             add_filter(
                 '__experimental_woocommerce_blocks_add_data_attributes_to_block',

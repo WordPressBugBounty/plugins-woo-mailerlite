@@ -19,9 +19,6 @@ jQuery(document).ready(function(a) {
     let listeningEvents = false;
     let iteratorInterrupt = 0;
 
-    // temporarily forcefully picking this js not blocks one
-    window.mailerlitePublicJsCaptured = true;
-
     if (wooMailerLitePublicData.checkboxSettings.enabled && document.body.classList.contains('woocommerce-checkout')) {
         triggerAddEvents();
     }

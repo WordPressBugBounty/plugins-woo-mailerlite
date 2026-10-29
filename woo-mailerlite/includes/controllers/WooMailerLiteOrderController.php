@@ -251,6 +251,28 @@ class WooMailerLiteOrderController extends WooMailerLiteController
     }
 
     /**
+     * Persists the checkout consent sent by the Blocks integration as Store API
+     * extension data, so it does not depend on a checkout field event firing.
+     */
+    public function persistBlocksCheckoutConsent($order, $request): void
+    {
+        try {
+            if (!$order instanceof WC_Order) {
+                return;
+            }
+
+            $extensions = $request['extensions'] ?? [];
+            $subscribe = !empty($extensions['woo-mailerlite']['subscribe']);
+
+            if ($subscribe || WooMailerLiteOptions::get('settings.checkoutHidden')) {
+                $order->update_meta_data('_woo_ml_subscribe', true);
+            }
+        } catch (\Throwable $e) {
+            WooMailerLiteLog()->error('persistBlocksCheckoutConsent', ['error' => $e->getMessage()]);
+        }
+    }
+
+    /**
      * Snapshots the language while the order is being created, so gateway
      * callbacks and later status changes do not need the shopper's session.
      */

@@ -11,7 +11,7 @@
         MailerLiteWooHidden,
     } = getSetting( 'woo-mailerlite_data', '' );
 
-    const WooMLBlock = () => {
+    const WooMLBlock = ( props ) => {
         const el = element.createElement
         const { useState, useEffect } = element
 
@@ -33,6 +33,12 @@
             });
             setupListeners()
         }, [] )
+
+        // Consent travels with the checkout request, so it reaches the order even
+        // when no field event fires (wallets, autofill).
+        useEffect( () => {
+            props?.checkoutExtensionData?.setExtensionData('woo-mailerlite', 'subscribe', MailerLiteWooHidden ? true : !!checked)
+        }, [ checked ] )
 
         function MailerLiteCheckbox() {
             return el(
@@ -87,9 +93,6 @@
         }
 
         function validateMLSub() {
-            if (window.mailerlitePublicJsCaptured) {
-                return
-            }
             if (!getCookie('mailerlite_checkout_token')) {
                 var now = new Date();
                 now.setTime(now.getTime() + 48 * 3600 * 1000);
@@ -199,8 +202,8 @@
                 reusable: false
             },
         },
-        component: () => {
-            return WooMLBlock()
+        component: ( props ) => {
+            return WooMLBlock( props )
         },
     }
 

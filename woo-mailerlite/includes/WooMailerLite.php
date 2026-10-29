@@ -204,6 +204,7 @@ class WooMailerLite {
         $this->loader->add_action('woocommerce_before_checkout_form', $service, 'handleCheckoutPage');
         $this->loader->add_action('woocommerce_checkout_create_order', WooMailerLiteOrderController::instance(), 'persistLanguageForOrder');
         $this->loader->add_action('woocommerce_store_api_checkout_update_order_from_request', WooMailerLiteOrderController::instance(), 'persistLanguageForOrder');
+        $this->loader->add_action('woocommerce_store_api_checkout_update_order_from_request', WooMailerLiteOrderController::instance(), 'persistBlocksCheckoutConsent', 10, 2);
         $this->loader->add_action('woocommerce_order_status_changed', WooMailerLiteOrderController::instance(), 'handleOrderStatusChanged');
         $this->loader->add_action('woocommerce_saved_order_items', WooMailerLiteOrderController::instance(), 'handleOrderStatusChanged');
         $this->loader->add_action('woocommerce_order_status_completed', WooMailerLiteOrderController::instance(), 'handleOrderStatusChanged');
